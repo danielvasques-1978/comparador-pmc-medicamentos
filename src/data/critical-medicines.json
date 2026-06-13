@@ -1,0 +1,782 @@
+[
+  {
+    "label": "Aripiprazol",
+    "query": "aripiprazol",
+    "allowed": [
+      "aripiprazol"
+    ]
+  },
+  {
+    "label": "Brexpiprazol",
+    "query": "brexpiprazol",
+    "allowed": [
+      "brexpiprazol"
+    ]
+  },
+  {
+    "label": "Paroxetina",
+    "query": "paroxetina",
+    "allowed": [
+      "paroxetina"
+    ]
+  },
+  {
+    "label": "Citalopram",
+    "query": "citalopram",
+    "allowed": [
+      "citalopram"
+    ]
+  },
+  {
+    "label": "Escitalopram",
+    "query": "escitalopram",
+    "allowed": [
+      "escitalopram"
+    ]
+  },
+  {
+    "label": "Amitriptilina",
+    "query": "amitriptilina",
+    "allowed": [
+      "amitriptilina"
+    ]
+  },
+  {
+    "label": "Clomipramina",
+    "query": "clomipramina",
+    "allowed": [
+      "clomipramina"
+    ]
+  },
+  {
+    "label": "Imipramina",
+    "query": "imipramina",
+    "allowed": [
+      "imipramina"
+    ]
+  },
+  {
+    "label": "Haloperidol",
+    "query": "haloperidol",
+    "allowed": [
+      "haloperidol"
+    ]
+  },
+  {
+    "label": "Sertralina",
+    "query": "sertralina",
+    "allowed": [
+      "sertralina"
+    ]
+  },
+  {
+    "label": "Vortioxetina",
+    "query": "vortioxetina",
+    "allowed": [
+      "vortioxetina"
+    ]
+  },
+  {
+    "label": "Fluvoxamina",
+    "query": "fluvoxamina",
+    "allowed": [
+      "fluvoxamina"
+    ]
+  },
+  {
+    "label": "Fluoxetina",
+    "query": "fluoxetina",
+    "allowed": [
+      "fluoxetina"
+    ]
+  },
+  {
+    "label": "Quetiapina",
+    "query": "quetiapina",
+    "allowed": [
+      "quetiapina"
+    ]
+  },
+  {
+    "label": "Lurasidona",
+    "query": "lurasidona",
+    "allowed": [
+      "lurasidona"
+    ]
+  },
+  {
+    "label": "Lamotrigina",
+    "query": "lamotrigina",
+    "allowed": [
+      "lamotrigina"
+    ]
+  },
+  {
+    "label": "Carbonato de lítio",
+    "query": "carbonato de litio",
+    "allowed": [
+      "litio"
+    ]
+  },
+  {
+    "label": "Lítio",
+    "query": "litio",
+    "allowed": [
+      "litio"
+    ]
+  },
+  {
+    "label": "Ácido valproico",
+    "query": "acido valproico",
+    "allowed": [
+      "valproico",
+      "valproato",
+      "divalproato"
+    ]
+  },
+  {
+    "label": "Carbamazepina",
+    "query": "carbamazepina",
+    "allowed": [
+      "carbamazepina"
+    ]
+  },
+  {
+    "label": "Periciazina",
+    "query": "periciazina",
+    "allowed": [
+      "periciazina"
+    ]
+  },
+  {
+    "label": "Levomepromazina",
+    "query": "levomepromazina",
+    "allowed": [
+      "levomepromazina"
+    ]
+  },
+  {
+    "label": "Venlafaxina",
+    "query": "venlafaxina",
+    "allowed": [
+      "venlafaxina"
+    ]
+  },
+  {
+    "label": "Desvenlafaxina",
+    "query": "desvenlafaxina",
+    "allowed": [
+      "desvenlafaxina"
+    ]
+  },
+  {
+    "label": "Duloxetina",
+    "query": "duloxetina",
+    "allowed": [
+      "duloxetina"
+    ]
+  },
+  {
+    "label": "Bupropiona",
+    "query": "bupropiona",
+    "allowed": [
+      "bupropiona"
+    ]
+  },
+  {
+    "label": "Buspirona",
+    "query": "buspirona",
+    "allowed": [
+      "buspirona"
+    ]
+  },
+  {
+    "label": "Olanzapina",
+    "query": "olanzapina",
+    "allowed": [
+      "olanzapina"
+    ]
+  },
+  {
+    "label": "Ziprasidona",
+    "query": "ziprasidona",
+    "allowed": [
+      "ziprasidona"
+    ]
+  },
+  {
+    "label": "Risperidona",
+    "query": "risperidona",
+    "allowed": [
+      "risperidona"
+    ]
+  },
+  {
+    "label": "Pregabalina",
+    "query": "pregabalina",
+    "allowed": [
+      "pregabalina"
+    ]
+  },
+  {
+    "label": "Gabapentina",
+    "query": "gabapentina",
+    "allowed": [
+      "gabapentina"
+    ]
+  },
+  {
+    "label": "Topiramato",
+    "query": "topiramato",
+    "allowed": [
+      "topiramato"
+    ]
+  },
+  {
+    "label": "Nortriptilina",
+    "query": "nortriptilina",
+    "allowed": [
+      "nortriptilina"
+    ]
+  },
+  {
+    "label": "Mirtazapina",
+    "query": "mirtazapina",
+    "allowed": [
+      "mirtazapina"
+    ]
+  },
+  {
+    "label": "Trazodona",
+    "query": "trazodona",
+    "allowed": [
+      "trazodona"
+    ]
+  },
+  {
+    "label": "Zolpidem",
+    "query": "zolpidem",
+    "allowed": [
+      "zolpidem"
+    ]
+  },
+  {
+    "label": "Clonazepam",
+    "query": "clonazepam",
+    "allowed": [
+      "clonazepam"
+    ]
+  },
+  {
+    "label": "Diazepam",
+    "query": "diazepam",
+    "allowed": [
+      "diazepam"
+    ]
+  },
+  {
+    "label": "Lorazepam",
+    "query": "lorazepam",
+    "allowed": [
+      "lorazepam"
+    ]
+  },
+  {
+    "label": "Alprazolam",
+    "query": "alprazolam",
+    "allowed": [
+      "alprazolam"
+    ]
+  },
+  {
+    "label": "Midazolam",
+    "query": "midazolam",
+    "allowed": [
+      "midazolam"
+    ]
+  },
+  {
+    "label": "Zuclopentixol",
+    "query": "zuclopentixol",
+    "allowed": [
+      "zuclopentixol"
+    ]
+  },
+  {
+    "label": "Clobazam",
+    "query": "clobazam",
+    "allowed": [
+      "clobazam"
+    ]
+  },
+  {
+    "label": "Clorpromazina",
+    "query": "clorpromazina",
+    "allowed": [
+      "clorpromazina"
+    ]
+  },
+  {
+    "label": "Paliperidona",
+    "query": "paliperidona",
+    "allowed": [
+      "paliperidona"
+    ]
+  },
+  {
+    "label": "Zopiclona",
+    "query": "zopiclona",
+    "allowed": [
+      "zopiclona"
+    ]
+  },
+  {
+    "label": "Eszopiclona",
+    "query": "eszopiclona",
+    "allowed": [
+      "eszopiclona"
+    ]
+  },
+  {
+    "label": "Agomelatina",
+    "query": "agomelatina",
+    "allowed": [
+      "agomelatina"
+    ]
+  },
+  {
+    "label": "Bromazepam",
+    "query": "bromazepam",
+    "allowed": [
+      "bromazepam"
+    ]
+  },
+  {
+    "label": "Galantamina",
+    "query": "galantamina",
+    "allowed": [
+      "galantamina"
+    ]
+  },
+  {
+    "label": "Rivastigmina",
+    "query": "rivastigmina",
+    "allowed": [
+      "rivastigmina"
+    ]
+  },
+  {
+    "label": "Atomoxetina",
+    "query": "atomoxetina",
+    "allowed": [
+      "atomoxetina"
+    ]
+  },
+  {
+    "label": "Metilfenidato",
+    "query": "metilfenidato",
+    "allowed": [
+      "metilfenidato"
+    ]
+  },
+  {
+    "label": "Lisdexanfetamina",
+    "query": "lisdexanfetamina",
+    "allowed": [
+      "lisdexanfetamina"
+    ]
+  },
+  {
+    "label": "Clonidina",
+    "query": "clonidina",
+    "allowed": [
+      "clonidina"
+    ]
+  },
+  {
+    "label": "Donepezila",
+    "query": "donepezila",
+    "allowed": [
+      "donepezila"
+    ]
+  },
+  {
+    "label": "Dexmedetomidina",
+    "query": "dexmedetomidina",
+    "allowed": [
+      "dexmedetomidina"
+    ]
+  },
+  {
+    "label": "Escetamina",
+    "query": "escetamina",
+    "allowed": [
+      "escetamina"
+    ]
+  },
+  {
+    "label": "Memantina",
+    "query": "memantina",
+    "allowed": [
+      "memantina"
+    ]
+  },
+  {
+    "label": "Prometazina",
+    "query": "prometazina",
+    "allowed": [
+      "prometazina"
+    ]
+  },
+  {
+    "label": "Biperideno",
+    "query": "biperideno",
+    "allowed": [
+      "biperideno"
+    ]
+  },
+  {
+    "label": "Oxcarbazepina",
+    "query": "oxcarbazepina",
+    "allowed": [
+      "oxcarbazepina"
+    ]
+  },
+  {
+    "label": "Clozapina",
+    "query": "clozapina",
+    "allowed": [
+      "clozapina"
+    ]
+  },
+  {
+    "label": "Dapoxetina",
+    "query": "dapoxetina",
+    "allowed": [
+      "dapoxetina"
+    ]
+  },
+  {
+    "label": "Pramipexol",
+    "query": "pramipexol",
+    "allowed": [
+      "pramipexol"
+    ]
+  },
+  {
+    "label": "Fenitoína",
+    "query": "fenitoina",
+    "allowed": [
+      "fenitoina"
+    ]
+  },
+  {
+    "label": "Fenobarbital",
+    "query": "fenobarbital",
+    "allowed": [
+      "fenobarbital"
+    ]
+  },
+  {
+    "label": "Flumazenil",
+    "query": "flumazenil",
+    "allowed": [
+      "flumazenil"
+    ]
+  },
+  {
+    "label": "Levetiracetam",
+    "query": "levetiracetam",
+    "allowed": [
+      "levetiracetam"
+    ]
+  },
+  {
+    "label": "Doxazosina",
+    "query": "doxazosina",
+    "allowed": [
+      "doxazosina"
+    ]
+  },
+  {
+    "label": "Naltrexona",
+    "query": "naltrexona",
+    "allowed": [
+      "naltrexona"
+    ]
+  },
+  {
+    "label": "Semaglutida",
+    "query": "semaglutida",
+    "allowed": [
+      "semaglutida"
+    ]
+  },
+  {
+    "label": "Tirzepatida",
+    "query": "tirzepatida",
+    "allowed": [
+      "tirzepatida"
+    ]
+  },
+  {
+    "label": "Liraglutida",
+    "query": "liraglutida",
+    "allowed": [
+      "liraglutida"
+    ]
+  },
+  {
+    "label": "Riluzol",
+    "query": "riluzol",
+    "allowed": [
+      "riluzol"
+    ]
+  },
+  {
+    "label": "Tadalafila",
+    "query": "tadalafila",
+    "allowed": [
+      "tadalafila"
+    ]
+  },
+  {
+    "label": "Amissulprida",
+    "query": "amissulprida",
+    "allowed": [
+      "amissulprida"
+    ]
+  },
+  {
+    "label": "Armodafinila",
+    "query": "armodafinila",
+    "allowed": [
+      "armodafinila"
+    ]
+  },
+  {
+    "label": "Modafinila",
+    "query": "modafinila",
+    "allowed": [
+      "modafinila"
+    ]
+  },
+  {
+    "label": "Bromocriptina",
+    "query": "bromocriptina",
+    "allowed": [
+      "bromocriptina"
+    ]
+  },
+  {
+    "label": "Buprenorfina",
+    "query": "buprenorfina",
+    "allowed": [
+      "buprenorfina"
+    ]
+  },
+  {
+    "label": "Cetamina",
+    "query": "cetamina",
+    "allowed": [
+      "cetamina",
+      "dextrocetamina"
+    ]
+  },
+  {
+    "label": "Desipramina",
+    "query": "desipramina",
+    "allowed": [
+      "desipramina"
+    ]
+  },
+  {
+    "label": "Deutetrabenazina",
+    "query": "deutetrabenazina",
+    "allowed": [
+      "deutetrabenazina"
+    ]
+  },
+  {
+    "label": "Dextrometorfano",
+    "query": "dextrometorfano",
+    "allowed": [
+      "dextrometorfano"
+    ]
+  },
+  {
+    "label": "Doxepina",
+    "query": "doxepina",
+    "allowed": [
+      "doxepina"
+    ]
+  },
+  {
+    "label": "Droperidol",
+    "query": "droperidol",
+    "allowed": [
+      "droperidol"
+    ]
+  },
+  {
+    "label": "Estazolam",
+    "query": "estazolam",
+    "allowed": [
+      "estazolam"
+    ]
+  },
+  {
+    "label": "Flufenazina",
+    "query": "flufenazina",
+    "allowed": [
+      "flufenazina"
+    ]
+  },
+  {
+    "label": "Flurazepam",
+    "query": "flurazepam",
+    "allowed": [
+      "flurazepam"
+    ]
+  },
+  {
+    "label": "Hidroxizina",
+    "query": "hidroxizina",
+    "allowed": [
+      "hidroxizina"
+    ]
+  },
+  {
+    "label": "Melatonina",
+    "query": "melatonina",
+    "allowed": [
+      "melatonina"
+    ]
+  },
+  {
+    "label": "Metadona",
+    "query": "metadona",
+    "allowed": [
+      "metadona"
+    ]
+  },
+  {
+    "label": "Metilfolato",
+    "query": "metilfolato",
+    "allowed": [
+      "metilfolato"
+    ]
+  },
+  {
+    "label": "N-acetilcisteína",
+    "query": "acetilcisteina",
+    "allowed": [
+      "acetilcisteina"
+    ]
+  },
+  {
+    "label": "Nicotina",
+    "query": "nicotina",
+    "allowed": [
+      "nicotina"
+    ]
+  },
+  {
+    "label": "Nitrazepam",
+    "query": "nitrazepam",
+    "allowed": [
+      "nitrazepam"
+    ]
+  },
+  {
+    "label": "Ondansetrona",
+    "query": "ondansetrona",
+    "allowed": [
+      "ondansetrona"
+    ]
+  },
+  {
+    "label": "Zonisamida",
+    "query": "zonisamida",
+    "allowed": [
+      "zonisamida"
+    ]
+  },
+  {
+    "label": "Vilazodona",
+    "query": "vilazodona",
+    "allowed": [
+      "vilazodona"
+    ]
+  },
+  {
+    "label": "Valbenazina",
+    "query": "valbenazina",
+    "allowed": [
+      "valbenazina"
+    ]
+  },
+  {
+    "label": "Triexifenidil",
+    "query": "triexifenidil",
+    "allowed": [
+      "triexifenidil"
+    ]
+  },
+  {
+    "label": "Canabidiol",
+    "query": "canabidiol",
+    "allowed": [
+      "canabidiol"
+    ]
+  },
+  {
+    "label": "Lemborexant",
+    "query": "lemborexant",
+    "allowed": [
+      "lemborexant"
+    ]
+  },
+  {
+    "label": "Sulpirida",
+    "query": "sulpirida",
+    "allowed": [
+      "sulpirida"
+    ]
+  },
+  {
+    "label": "Sibutramina",
+    "query": "sibutramina",
+    "allowed": [
+      "sibutramina"
+    ]
+  },
+  {
+    "label": "Selegilina",
+    "query": "selegilina",
+    "allowed": [
+      "selegilina"
+    ]
+  },
+  {
+    "label": "Ramelteona",
+    "query": "ramelteona",
+    "allowed": [
+      "ramelteona"
+    ]
+  },
+  {
+    "label": "Propranolol",
+    "query": "propranolol",
+    "allowed": [
+      "propranolol"
+    ]
+  },
+  {
+    "label": "Pipotiazina",
+    "query": "pipotiazina",
+    "allowed": [
+      "pipotiazina"
+    ]
+  }
+]

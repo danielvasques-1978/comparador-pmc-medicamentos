@@ -1,0 +1,33 @@
+{
+  "name": "comparador-pmc-medicamentos",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "migrate:neon": "node scripts/migrate_neon.mjs",
+    "seed:neon": "node scripts/seed_neon_medicines.mjs",
+    "validate:critical": "node scripts/validate_critical_medicines.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "lucide-react": "^0.468.0",
+    "next": "^16.2.9",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.0.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.2.9",
+    "typescript": "^5.0.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
+  }
+}

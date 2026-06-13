@@ -1,0 +1,17 @@
+.next/
+.next-app/
+node_modules/
+out/
+dist/
+build/
+.env*
+!.env.example
+.npm-cache/
+.appdata/
+.localappdata/
+.config/
+.vercel/
+*.tsbuildinfo
+*.log
+
+.vercel
