@@ -563,6 +563,12 @@ h1 {
   font-size: 0.86rem;
 }
 
+.plan-card .plan-note {
+  color: var(--muted);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .plan-card strong {
   color: var(--text);
 }

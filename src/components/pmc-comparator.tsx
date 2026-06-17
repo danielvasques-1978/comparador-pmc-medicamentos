@@ -33,6 +33,7 @@ const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
+const billingEnabled = process.env.NEXT_PUBLIC_BILLING_ENABLED === "true";
 const billingRequired = process.env.NEXT_PUBLIC_BILLING_REQUIRED === "true";
 
 function formatRate(rate: string) {
@@ -245,7 +246,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
   const tableDate = medicines[0]?.tableDate ?? "Não informada";
   const activeQuery = query.trim();
   const hasSearch = normalize(activeQuery).length >= 2;
-  const hasPaidAccess = !billingRequired || planStatus === "active" || planStatus === "trialing";
+  const hasPaidAccess = !billingEnabled || !billingRequired || planStatus === "active" || planStatus === "trialing";
 
   const relatedIngredientTokens = useMemo(() => {
     const search = normalize(activeQuery);
@@ -720,7 +721,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
         </div>
       </section>
 
-      {!hasPaidAccess ? (
+      {billingEnabled && !hasPaidAccess ? (
         <section className="paywall-strip">
           <div>
             <strong>Assinatura necessária</strong>
@@ -954,11 +955,13 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
                       <CreditCard size={17} />
                       <span>Gerenciar</span>
                     </button>
-                  ) : (
+                  ) : billingEnabled ? (
                     <button className="primary-button" type="button" onClick={() => openBilling("/api/billing/checkout")}>
                       <CreditCard size={17} />
                       <span>Assinar</span>
                     </button>
+                  ) : (
+                    <span className="plan-note">Cobrança não ativada</span>
                   )}
                 </div>
                 <a className="ghost-button" href="/api/account/export" target="_blank" rel="noreferrer">

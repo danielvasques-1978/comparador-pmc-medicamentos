@@ -40,9 +40,10 @@ A cobrança usa Stripe Billing com Checkout para contratar e Customer Portal par
 - `STRIPE_PRICE_ID`
 - `STRIPE_WEBHOOK_SECRET`
 - `NEXT_PUBLIC_APP_URL`
+- `NEXT_PUBLIC_BILLING_ENABLED=true` para mostrar botões Stripe
 - `NEXT_PUBLIC_BILLING_REQUIRED=true` para exigir assinatura ativa nos resultados
 
-Sem essas variáveis, o app continua funcionando e mostra cobrança indisponível.
+Sem essas variáveis, o app continua funcionando no plano gratuito e não mostra botões de pagamento.
 
 ## Deploy
 

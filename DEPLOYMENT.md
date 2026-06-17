@@ -9,6 +9,7 @@
 DATABASE_URL=
 ADMIN_EMAILS=
 NEXT_PUBLIC_APP_URL=
+NEXT_PUBLIC_BILLING_ENABLED=false
 NEXT_PUBLIC_BILLING_REQUIRED=false
 STRIPE_SECRET_KEY=
 STRIPE_PRICE_ID=
@@ -57,6 +58,7 @@ No app local, abra `/admin` para conferir:
    - `DATABASE_URL`
    - `ADMIN_EMAILS` com os e-mails autorizados a abrir `/admin`, separados por vírgula.
    - `NEXT_PUBLIC_APP_URL=https://comparador-pmc-medicamentos.vercel.app`
+   - `NEXT_PUBLIC_BILLING_ENABLED=false` enquanto Stripe não estiver configurado; use `true` para mostrar pagamento.
    - `NEXT_PUBLIC_BILLING_REQUIRED=false` enquanto estiver testando; use `true` para exigir assinatura nos resultados.
    - `STRIPE_SECRET_KEY`
    - `STRIPE_PRICE_ID`
