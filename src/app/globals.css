@@ -473,6 +473,106 @@ h1 {
   margin-top: 16px;
 }
 
+.auth-switch {
+  background: #edf2f5;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 14px;
+  padding: 4px;
+}
+
+.auth-switch button {
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  min-height: 36px;
+}
+
+.auth-switch button.active {
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(31, 47, 70, 0.12);
+  color: var(--teal-dark);
+  font-weight: 800;
+}
+
+.checkbox-row {
+  align-items: flex-start;
+  color: var(--muted);
+  display: flex;
+  font-size: 0.9rem;
+  gap: 10px;
+}
+
+.checkbox-row a {
+  color: var(--teal-dark);
+  font-weight: 800;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.danger-button {
+  align-items: center;
+  background: #fff5f6;
+  border: 1px solid #efbdc8;
+  border-radius: 8px;
+  color: var(--rose);
+  display: inline-flex;
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.app-footer {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.86rem;
+  gap: 12px;
+  justify-content: center;
+  padding: 22px 0 6px;
+  text-align: center;
+}
+
+.app-footer a {
+  color: var(--teal-dark);
+  font-weight: 800;
+}
+
+.legal-shell {
+  display: grid;
+  gap: 16px;
+  margin: 0 auto;
+  max-width: 900px;
+  padding: 24px;
+}
+
+.legal-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+.legal-panel h2 {
+  font-size: 1.05rem;
+  margin-top: 8px;
+}
+
+.legal-panel p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .admin-shell {
   display: grid;
   gap: 18px;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/neon";
+import { getProfileId } from "@/lib/profile-server";
 
 export async function POST(request: NextRequest) {
   const sql = getSql();
@@ -14,14 +15,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "clientKey is required" }, { status: 400 });
   }
 
-  const rows = await sql`
-    insert into app_profiles (client_key, email, updated_at)
-    values (${clientKey}, ${email || null}, now())
-    on conflict (client_key) do update set
-      email = coalesce(excluded.email, app_profiles.email),
-      updated_at = now()
-    returning id, email
-  `;
+  const { profileId, user } = await getProfileId(sql, request, clientKey);
+
+  const rows = user
+    ? await sql`select id, email from app_profiles where id = ${profileId}`
+    : await sql`
+      update app_profiles
+      set email = coalesce(${email || null}, email), updated_at = now()
+      where id = ${profileId}
+      returning id, email
+    `;
 
   return NextResponse.json({ enabled: true, profile: rows[0] });
 }

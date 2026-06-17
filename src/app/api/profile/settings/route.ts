@@ -1,24 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/neon";
-
-async function getProfileId(clientKey: string) {
-  const sql = getSql();
-  if (!sql) return null;
-  const rows = await sql`
-    insert into app_profiles (client_key)
-    values (${clientKey})
-    on conflict (client_key) do update set updated_at = now()
-    returning id
-  `;
-  return rows[0]?.id as string | undefined;
-}
+import { getProfileId } from "@/lib/profile-server";
 
 export async function GET(request: NextRequest) {
   const sql = getSql();
   const clientKey = request.nextUrl.searchParams.get("clientKey");
   if (!sql || !clientKey) return NextResponse.json({ settings: null });
 
-  const profileId = await getProfileId(clientKey);
+  const { profileId } = await getProfileId(sql, request, clientKey);
   const rows = await sql`
     select uf_icms_map
     from user_settings
@@ -41,7 +30,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "clientKey and ufIcmsMap are required" }, { status: 400 });
   }
 
-  const profileId = await getProfileId(clientKey);
+  const { profileId } = await getProfileId(sql, request, clientKey);
   await sql`
     insert into user_settings (profile_id, uf_icms_map, updated_at)
     values (${profileId}, ${JSON.stringify(ufIcmsMap)}::jsonb, now())

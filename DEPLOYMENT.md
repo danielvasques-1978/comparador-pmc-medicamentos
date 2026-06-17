@@ -15,6 +15,8 @@ DATABASE_URL=
 npm run migrate:neon
 ```
 
+O comando aplica todas as migrações em `neon/migrations`, incluindo a estrutura de medicamentos, perfis, login e trilha mínima de consentimento LGPD.
+
 4. Carregue a base importada do PDF:
 
 ```powershell
@@ -47,12 +49,20 @@ No app local, abra `/admin` para conferir:
 2. Importe o projeto na Vercel como aplicação Next.js.
 3. Em Environment Variables, configure:
    - `DATABASE_URL`
+   - `ADMIN_EMAILS` com os e-mails autorizados a abrir `/admin`, separados por vírgula.
 4. Faça o deploy normalmente.
-5. Após deploy, abra `/admin` no domínio publicado e confira se não há bloqueios.
+5. Crie uma conta no app usando um e-mail listado em `ADMIN_EMAILS`.
+6. Após deploy, abra `/admin` no domínio publicado e confira se não há bloqueios.
 
-## Perfil
+## Conta e LGPD
 
-O app já tem estrutura para perfil, favoritos, histórico e preferências. Nesta etapa, o perfil é identificado por uma chave local do navegador; o e-mail é apenas um rótulo opcional. Login real entre dispositivos pode entrar depois com Auth.js, Clerk, Neon Auth ou outro provedor.
+O app mantém uso sem login. Quando o usuário cria conta, o sistema salva e-mail, senha com hash, datas de aceite de termos e privacidade, favoritos, histórico e preferências. A conta autenticada pode exportar dados em `/api/account/export` e excluir a conta em `/api/account/delete`.
+
+Para uma operação comercial completa, ainda falta revisão jurídica formal, rotina de retenção, política de resposta a incidentes, recuperação de senha, verificação de e-mail, limitação de tentativas de login e integração de cobrança.
+
+## Cobrança Futura
+
+A tabela `auth_users` já tem `plan_status` e `stripe_customer_id` para assinatura futura. A próxima etapa deve criar Checkout, portal do cliente e webhooks do Stripe antes de bloquear recursos pagos.
 
 ## Dados Persistidos
 

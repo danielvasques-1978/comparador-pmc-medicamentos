@@ -177,6 +177,9 @@ function readUfIcmsMap() {
 export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
   const [query, setQuery] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [uf, setUf] = useState<UfCode>("SP");
   const [kind, setKind] = useState("Todos");
   const [lab, setLab] = useState("Todos");
@@ -200,6 +203,16 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     setRecentSearches(readJson<string[]>(storageKeys.recentSearches, []));
     const savedEmail = window.localStorage.getItem(storageKeys.profileEmail);
     setUserEmail(savedEmail);
+    void fetch("/api/auth/me")
+      .then((response) => response.json())
+      .then((data: { user?: { email: string } | null }) => {
+        if (data.user?.email) {
+          window.localStorage.setItem(storageKeys.profileEmail, data.user.email);
+          setUserEmail(data.user.email);
+          setEmail(data.user.email);
+        }
+      })
+      .catch(() => undefined);
     void syncFromNeon();
   }, []);
 
@@ -407,31 +420,57 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     void saveSearchHistory(trimmed, filtered.length);
   }
 
-  async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
+  async function submitAuth(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmedEmail = email.trim();
     try {
-      const response = await fetch("/api/profile", {
+      const response = await fetch(authMode === "login" ? "/api/auth/login" : "/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientKey: getClientKey(), email: trimmedEmail || null }),
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password,
+          acceptedPrivacy,
+        }),
       });
-      if (!response.ok) throw new Error("profile");
-      if (trimmedEmail) {
-        window.localStorage.setItem(storageKeys.profileEmail, trimmedEmail);
-        setUserEmail(trimmedEmail);
+      const data = (await response.json()) as { user?: { email: string }; error?: string };
+      if (!response.ok || !data.user) {
+        throw new Error(data.error ?? "auth");
       }
-      setAuthMessage("Perfil salvo neste navegador.");
+      window.localStorage.setItem(storageKeys.profileEmail, data.user.email);
+      setUserEmail(data.user.email);
+      setAuthMessage(authMode === "login" ? "Login realizado." : "Conta criada.");
+      setPassword("");
       void syncFromNeon();
     } catch {
-      setAuthMessage("Não foi possível sincronizar agora. Os dados seguem salvos neste navegador.");
+      setAuthMessage("Não foi possível autenticar. Confira e-mail, senha e aceite de privacidade.");
     }
   }
 
-  function signOut() {
+  async function signOut() {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     window.localStorage.removeItem(storageKeys.profileEmail);
     setUserEmail(null);
     setEmail("");
+    setPassword("");
+    void syncFromNeon();
+  }
+
+  async function deleteAccount() {
+    if (!window.confirm("Excluir sua conta, favoritos e histórico salvos?")) return;
+    const response = await fetch("/api/account/delete", { method: "POST" });
+    if (response.ok) {
+      window.localStorage.removeItem(storageKeys.profileEmail);
+      setUserEmail(null);
+      setEmail("");
+      setFavorites([]);
+      setRecentSearches([]);
+      writeJson(storageKeys.favorites, []);
+      writeJson(storageKeys.recentSearches, []);
+      setAuthMessage("Conta excluída.");
+    } else {
+      setAuthMessage("Não foi possível excluir a conta agora.");
+    }
   }
 
   function exportCsv() {
@@ -751,14 +790,30 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
           <section className="settings-modal auth-modal">
             <div className="modal-title">
               <div>
-                <p className="eyebrow">Perfil opcional</p>
-                <h2>Salvar favoritos e histórico</h2>
+                <p className="eyebrow">Conta opcional</p>
+                <h2>Favoritos e histórico</h2>
               </div>
               <button className="icon-button" type="button" onClick={() => setShowLogin(false)} title="Fechar">
                 <X size={20} />
               </button>
             </div>
-            <form className="auth-form" onSubmit={saveProfile}>
+            <div className="auth-switch" role="tablist" aria-label="Tipo de acesso">
+              <button
+                className={authMode === "login" ? "active" : ""}
+                type="button"
+                onClick={() => setAuthMode("login")}
+              >
+                Entrar
+              </button>
+              <button
+                className={authMode === "register" ? "active" : ""}
+                type="button"
+                onClick={() => setAuthMode("register")}
+              >
+                Criar conta
+              </button>
+            </div>
+            <form className="auth-form" onSubmit={submitAuth}>
               <label className="select-field">
                 <span>E-mail</span>
                 <input
@@ -770,14 +825,53 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
                   onChange={(event) => setEmail(event.target.value)}
                 />
               </label>
+              <label className="select-field">
+                <span>Senha</span>
+                <input
+                  autoComplete={authMode === "login" ? "current-password" : "new-password"}
+                  minLength={8}
+                  placeholder="mínimo 8 caracteres"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </label>
+              {authMode === "register" ? (
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={acceptedPrivacy}
+                    onChange={(event) => setAcceptedPrivacy(event.target.checked)}
+                  />
+                  <span>
+                    Li e aceito os <a href="/termos">Termos</a> e a{" "}
+                    <a href="/privacidade">Política de Privacidade</a>.
+                  </span>
+                </label>
+              ) : null}
               <button className="primary-button" type="submit">
-                Salvar perfil
+                {authMode === "login" ? "Entrar" : "Criar conta"}
               </button>
             </form>
+            {userEmail ? (
+              <div className="account-actions">
+                <a className="ghost-button" href="/api/account/export" target="_blank" rel="noreferrer">
+                  Exportar dados
+                </a>
+                <button className="danger-button" type="button" onClick={deleteAccount}>
+                  Excluir conta
+                </button>
+              </div>
+            ) : null}
             {authMessage ? <p className="modal-copy">{authMessage}</p> : null}
           </section>
         </div>
       ) : null}
+      <footer className="app-footer">
+        <span>PMC é preço máximo ao consumidor, não preço praticado pela farmácia.</span>
+        <a href="/termos">Termos</a>
+        <a href="/privacidade">Privacidade</a>
+      </footer>
     </main>
   );
 }

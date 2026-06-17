@@ -12,16 +12,25 @@ if (!databaseUrl) {
 }
 
 const sql = neon(databaseUrl);
-const migrationPath = path.join(process.cwd(), "neon", "migrations", "20260611000000_app_schema.sql");
-const migration = fs.readFileSync(migrationPath, "utf8");
+const migrationsPath = path.join(process.cwd(), "neon", "migrations");
+const migrationFiles = fs
+  .readdirSync(migrationsPath)
+  .filter((fileName) => fileName.endsWith(".sql"))
+  .sort();
 
-const statements = migration
-  .split(";")
-  .map((statement) => statement.trim())
-  .filter(Boolean);
+let applied = 0;
 
-for (const statement of statements) {
-  await sql.query(statement);
+for (const fileName of migrationFiles) {
+  const migration = fs.readFileSync(path.join(migrationsPath, fileName), "utf8");
+  const statements = migration
+    .split(";")
+    .map((statement) => statement.trim())
+    .filter(Boolean);
+
+  for (const statement of statements) {
+    await sql.query(statement);
+    applied += 1;
+  }
 }
 
-console.log(`Applied ${statements.length} Neon migration statements.`);
+console.log(`Applied ${applied} Neon migration statements from ${migrationFiles.length} files.`);

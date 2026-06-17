@@ -1,11 +1,38 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { AlertTriangle, ArrowLeft, CheckCircle2, Database, FileCheck2, UploadCloud } from "lucide-react";
+import { getCurrentUserByToken, isAdminEmail, sessionCookieName } from "@/lib/auth-server";
 import { validateCriticalMedicines } from "@/lib/critical-validation";
 import { getMedicines } from "@/lib/medicines";
+import { getSql } from "@/lib/neon";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
+  const sql = getSql();
+  const cookieStore = await cookies();
+  const user = sql ? await getCurrentUserByToken(sql, cookieStore.get(sessionCookieName)?.value) : null;
+
+  if (!user || !isAdminEmail(user.email)) {
+    return (
+      <main className="admin-shell">
+        <header className="admin-header">
+          <div>
+            <p className="eyebrow">Administração</p>
+            <h1>Acesso restrito</h1>
+            <p className="admin-copy">
+              Entre com uma conta autorizada para revisar a base importada. Configure `ADMIN_EMAILS` na Vercel para liberar esta área.
+            </p>
+          </div>
+          <Link className="ghost-button" href="/">
+            <ArrowLeft size={18} />
+            <span>Voltar</span>
+          </Link>
+        </header>
+      </main>
+    );
+  }
+
   const medicines = await getMedicines();
   const report = validateCriticalMedicines(medicines);
   const tableDate = medicines[0]?.tableDate ?? "Não informada";
