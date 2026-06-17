@@ -8,6 +8,7 @@ export type AuthUser = {
   id: string;
   email: string;
   planStatus: string;
+  subscriptionCurrentPeriodEnd: string | null;
 };
 
 export const sessionCookieName = "comparador_pmc_session";
@@ -63,7 +64,7 @@ export async function getCurrentUserByToken(sql: Sql, token?: string): Promise<A
   if (!token) return null;
 
   const rows = await sql`
-    select u.id, u.email, u.plan_status
+    select u.id, u.email, u.plan_status, u.subscription_current_period_end
     from auth_sessions s
     join auth_users u on u.id = s.user_id
     where s.token_hash = ${hashToken(token)}
@@ -79,6 +80,9 @@ export async function getCurrentUserByToken(sql: Sql, token?: string): Promise<A
     id: row.id as string,
     email: row.email as string,
     planStatus: row.plan_status as string,
+    subscriptionCurrentPeriodEnd: row.subscription_current_period_end
+      ? new Date(row.subscription_current_period_end as string).toISOString()
+      : null,
   };
 }
 

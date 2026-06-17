@@ -10,6 +10,9 @@ Aplicação Next.js para comparar PMC de apresentações de medicamentos por UF/
 - `/termos`: termos de uso.
 - `/api/account/export`: exportação dos dados da conta autenticada.
 - `/api/account/delete`: exclusão da conta autenticada.
+- `/api/billing/checkout`: cria sessão de assinatura Stripe.
+- `/api/billing/portal`: abre portal de gerenciamento da assinatura.
+- `/api/billing/webhook`: recebe eventos Stripe para sincronizar plano.
 
 ## Comandos
 
@@ -29,7 +32,17 @@ O projeto usa Neon via `DATABASE_URL`. Configure `.env.local` localmente e a mes
 
 O app tem cadastro e login opcionais com senha hash, sessão em cookie httpOnly, aceite de termos/privacidade, exportação de dados e exclusão de conta. A busca pública continua funcionando sem login.
 
-Cobrança ainda não está ativada. A base já tem campo de status do plano e identificador futuro de cliente Stripe, mas Checkout, portal do cliente e webhooks ficam para a próxima etapa.
+## Assinatura
+
+A cobrança usa Stripe Billing com Checkout para contratar e Customer Portal para gerenciar/cancelar. Configure:
+
+- `STRIPE_SECRET_KEY`
+- `STRIPE_PRICE_ID`
+- `STRIPE_WEBHOOK_SECRET`
+- `NEXT_PUBLIC_APP_URL`
+- `NEXT_PUBLIC_BILLING_REQUIRED=true` para exigir assinatura ativa nos resultados
+
+Sem essas variáveis, o app continua funcionando e mostra cobrança indisponível.
 
 ## Deploy
 

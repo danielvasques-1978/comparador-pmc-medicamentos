@@ -16,7 +16,8 @@
     "lucide-react": "^0.468.0",
     "next": "^16.2.9",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "stripe": "^22.2.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",

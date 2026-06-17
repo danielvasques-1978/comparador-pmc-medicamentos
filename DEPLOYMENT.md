@@ -7,6 +7,12 @@
 
 ```env
 DATABASE_URL=
+ADMIN_EMAILS=
+NEXT_PUBLIC_APP_URL=
+NEXT_PUBLIC_BILLING_REQUIRED=false
+STRIPE_SECRET_KEY=
+STRIPE_PRICE_ID=
+STRIPE_WEBHOOK_SECRET=
 ```
 
 3. Aplique a migração:
@@ -15,7 +21,7 @@ DATABASE_URL=
 npm run migrate:neon
 ```
 
-O comando aplica todas as migrações em `neon/migrations`, incluindo a estrutura de medicamentos, perfis, login e trilha mínima de consentimento LGPD.
+O comando aplica todas as migrações em `neon/migrations`, incluindo a estrutura de medicamentos, perfis, login, trilha mínima de consentimento LGPD e campos de assinatura.
 
 4. Carregue a base importada do PDF:
 
@@ -50,6 +56,11 @@ No app local, abra `/admin` para conferir:
 3. Em Environment Variables, configure:
    - `DATABASE_URL`
    - `ADMIN_EMAILS` com os e-mails autorizados a abrir `/admin`, separados por vírgula.
+   - `NEXT_PUBLIC_APP_URL=https://comparador-pmc-medicamentos.vercel.app`
+   - `NEXT_PUBLIC_BILLING_REQUIRED=false` enquanto estiver testando; use `true` para exigir assinatura nos resultados.
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_PRICE_ID`
+   - `STRIPE_WEBHOOK_SECRET`
 4. Faça o deploy normalmente.
 5. Crie uma conta no app usando um e-mail listado em `ADMIN_EMAILS`.
 6. Após deploy, abra `/admin` no domínio publicado e confira se não há bloqueios.
@@ -58,11 +69,23 @@ No app local, abra `/admin` para conferir:
 
 O app mantém uso sem login. Quando o usuário cria conta, o sistema salva e-mail, senha com hash, datas de aceite de termos e privacidade, favoritos, histórico e preferências. A conta autenticada pode exportar dados em `/api/account/export` e excluir a conta em `/api/account/delete`.
 
-Para uma operação comercial completa, ainda falta revisão jurídica formal, rotina de retenção, política de resposta a incidentes, recuperação de senha, verificação de e-mail, limitação de tentativas de login e integração de cobrança.
+Para uma operação comercial completa, ainda falta revisão jurídica formal, rotina de retenção, política de resposta a incidentes, recuperação de senha, verificação de e-mail e limitação de tentativas de login.
 
-## Cobrança Futura
+## Cobrança
 
-A tabela `auth_users` já tem `plan_status` e `stripe_customer_id` para assinatura futura. A próxima etapa deve criar Checkout, portal do cliente e webhooks do Stripe antes de bloquear recursos pagos.
+A cobrança usa Stripe Billing:
+
+- Checkout Sessions em modo `subscription` para contratar.
+- Customer Portal para gerenciar cartão, recibos e cancelamento.
+- Webhook `/api/billing/webhook` para sincronizar `plan_status`, `stripe_customer_id`, `stripe_subscription_id`, `stripe_price_id` e renovação.
+
+No painel Stripe, configure o endpoint de webhook apontando para:
+
+```text
+https://comparador-pmc-medicamentos.vercel.app/api/billing/webhook
+```
+
+Eventos recomendados: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid` e `invoice.payment_failed`.
 
 ## Dados Persistidos
 
@@ -72,3 +95,5 @@ A tabela `auth_users` já tem `plan_status` e `stripe_customer_id` para assinatu
 - `user_favorites`: favoritos por perfil.
 - `search_history`: histórico de busca por perfil.
 - `user_settings`: configuração de ICMS por UF por perfil.
+- `auth_users`: conta, consentimento, status de plano e identificadores Stripe.
+- `auth_sessions`: sessões ativas.

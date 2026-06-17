@@ -2,6 +2,7 @@
 
 import {
   ArrowDownUp,
+  CreditCard,
   Download,
   Heart,
   Landmark,
@@ -20,11 +21,19 @@ import { defaultUfIcmsMap, icmsRates, isIcmsRate, resolvePricingZone, ufCodes } 
 import type { IcmsRate, Medicine, UfCode, UfIcmsMap } from "@/lib/types";
 
 type SortMode = "group-lab" | "price-asc" | "price-desc" | "name";
+type AuthPayload = {
+  user?: {
+    email: string;
+    planStatus?: string;
+    subscriptionCurrentPeriodEnd?: string | null;
+  } | null;
+};
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
+const billingRequired = process.env.NEXT_PUBLIC_BILLING_REQUIRED === "true";
 
 function formatRate(rate: string) {
   return `${rate.replace(".", ",")}%`;
@@ -193,6 +202,8 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
   const [ufMap, setUfMap] = useState<UfIcmsMap>(defaultUfIcmsMap);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [planStatus, setPlanStatus] = useState("free");
+  const [subscriptionCurrentPeriodEnd, setSubscriptionCurrentPeriodEnd] = useState<string | null>(null);
   const [authMessage, setAuthMessage] = useState("");
 
   useEffect(() => {
@@ -205,14 +216,26 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     setUserEmail(savedEmail);
     void fetch("/api/auth/me")
       .then((response) => response.json())
-      .then((data: { user?: { email: string } | null }) => {
+      .then((data: AuthPayload) => {
         if (data.user?.email) {
           window.localStorage.setItem(storageKeys.profileEmail, data.user.email);
           setUserEmail(data.user.email);
           setEmail(data.user.email);
+          setPlanStatus(data.user.planStatus ?? "free");
+          setSubscriptionCurrentPeriodEnd(data.user.subscriptionCurrentPeriodEnd ?? null);
         }
       })
       .catch(() => undefined);
+    const billingResult = new URLSearchParams(window.location.search).get("billing");
+    if (billingResult === "success") {
+      setAuthMessage("Pagamento recebido. A assinatura será liberada assim que o Stripe confirmar.");
+      void refreshAccount();
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    if (billingResult === "cancelled") {
+      setAuthMessage("Assinatura cancelada antes do pagamento.");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
     void syncFromNeon();
   }, []);
 
@@ -222,6 +245,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
   const tableDate = medicines[0]?.tableDate ?? "Não informada";
   const activeQuery = query.trim();
   const hasSearch = normalize(activeQuery).length >= 2;
+  const hasPaidAccess = !billingRequired || planStatus === "active" || planStatus === "trialing";
 
   const relatedIngredientTokens = useMemo(() => {
     const search = normalize(activeQuery);
@@ -271,6 +295,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     const search = normalize(activeQuery);
     const favoriteSet = new Set(favorites);
     const max = maxPrice ? Number(maxPrice.replace(",", ".")) : null;
+    if (!hasPaidAccess) return [];
 
     const rows = medicines.filter((item) => {
       if (!search && !onlyFavorites) return false;
@@ -298,7 +323,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     });
 
     return rows;
-  }, [activeQuery, favorites, form, kind, lab, maxPrice, medicines, onlyFavorites, relatedIngredientTokens, selectedZone, sortMode]);
+  }, [activeQuery, favorites, form, hasPaidAccess, kind, lab, maxPrice, medicines, onlyFavorites, relatedIngredientTokens, selectedZone, sortMode]);
 
   const visibleRows = filtered.slice(0, 250);
 
@@ -433,12 +458,14 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
           acceptedPrivacy,
         }),
       });
-      const data = (await response.json()) as { user?: { email: string }; error?: string };
+      const data = (await response.json()) as AuthPayload & { error?: string };
       if (!response.ok || !data.user) {
         throw new Error(data.error ?? "auth");
       }
       window.localStorage.setItem(storageKeys.profileEmail, data.user.email);
       setUserEmail(data.user.email);
+      setPlanStatus(data.user.planStatus ?? "free");
+      setSubscriptionCurrentPeriodEnd(data.user.subscriptionCurrentPeriodEnd ?? null);
       setAuthMessage(authMode === "login" ? "Login realizado." : "Conta criada.");
       setPassword("");
       void syncFromNeon();
@@ -452,6 +479,8 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     window.localStorage.removeItem(storageKeys.profileEmail);
     setUserEmail(null);
     setEmail("");
+    setPlanStatus("free");
+    setSubscriptionCurrentPeriodEnd(null);
     setPassword("");
     void syncFromNeon();
   }
@@ -463,6 +492,8 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
       window.localStorage.removeItem(storageKeys.profileEmail);
       setUserEmail(null);
       setEmail("");
+      setPlanStatus("free");
+      setSubscriptionCurrentPeriodEnd(null);
       setFavorites([]);
       setRecentSearches([]);
       writeJson(storageKeys.favorites, []);
@@ -471,6 +502,37 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     } else {
       setAuthMessage("Não foi possível excluir a conta agora.");
     }
+  }
+
+  async function refreshAccount() {
+    const response = await fetch("/api/auth/me");
+    const data = (await response.json()) as AuthPayload;
+    if (data.user?.email) {
+      setUserEmail(data.user.email);
+      setPlanStatus(data.user.planStatus ?? "free");
+      setSubscriptionCurrentPeriodEnd(data.user.subscriptionCurrentPeriodEnd ?? null);
+    }
+  }
+
+  async function openBilling(endpoint: "/api/billing/checkout" | "/api/billing/portal") {
+    try {
+      const response = await fetch(endpoint, { method: "POST" });
+      const data = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !data.url) {
+        throw new Error(data.error ?? "billing");
+      }
+      window.location.assign(data.url);
+    } catch {
+      setAuthMessage("Cobrança ainda não configurada. Configure Stripe para ativar assinaturas.");
+    }
+  }
+
+  function planLabel() {
+    if (planStatus === "active") return "Plano ativo";
+    if (planStatus === "trialing") return "Teste ativo";
+    if (planStatus === "past_due") return "Pagamento pendente";
+    if (planStatus === "canceled") return "Assinatura cancelada";
+    return "Plano gratuito";
   }
 
   function exportCsv() {
@@ -658,13 +720,35 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
         </div>
       </section>
 
+      {!hasPaidAccess ? (
+        <section className="paywall-strip">
+          <div>
+            <strong>Assinatura necessária</strong>
+            <span>Entre e assine para visualizar os resultados completos.</span>
+          </div>
+          {userEmail ? (
+            <button className="primary-button" type="button" onClick={() => openBilling("/api/billing/checkout")}>
+              <CreditCard size={17} />
+              <span>Assinar</span>
+            </button>
+          ) : (
+            <button className="primary-button" type="button" onClick={() => setShowLogin(true)}>
+              <UserRound size={17} />
+              <span>Entrar</span>
+            </button>
+          )}
+        </section>
+      ) : null}
+
       <section className="table-section">
         <div className="table-header">
           <div>
             <h2>Preço máximo ao consumidor</h2>
             <p>
               {hasSearch
-                ? `Busca aplicada: "${activeQuery}", incluindo equivalentes pelo princípio ativo. Exibindo até 250 resultados.`
+                ? hasPaidAccess
+                  ? `Busca aplicada: "${activeQuery}", incluindo equivalentes pelo princípio ativo. Exibindo até 250 resultados.`
+                  : "Assinatura necessária para exibir resultados."
                 : "Digite pelo menos 2 letras do medicamento ou princípio ativo."}
             </p>
           </div>
@@ -855,6 +939,28 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
             </form>
             {userEmail ? (
               <div className="account-actions">
+                <div className="plan-card">
+                  <div>
+                    <span>Assinatura</span>
+                    <strong>{planLabel()}</strong>
+                    {subscriptionCurrentPeriodEnd ? (
+                      <small>Renova em {new Date(subscriptionCurrentPeriodEnd).toLocaleDateString("pt-BR")}</small>
+                    ) : (
+                      <small>Favoritos, histórico e exportação ficam disponíveis na conta.</small>
+                    )}
+                  </div>
+                  {planStatus === "active" || planStatus === "trialing" || planStatus === "past_due" ? (
+                    <button className="ghost-button" type="button" onClick={() => openBilling("/api/billing/portal")}>
+                      <CreditCard size={17} />
+                      <span>Gerenciar</span>
+                    </button>
+                  ) : (
+                    <button className="primary-button" type="button" onClick={() => openBilling("/api/billing/checkout")}>
+                      <CreditCard size={17} />
+                      <span>Assinar</span>
+                    </button>
+                  )}
+                </div>
                 <a className="ghost-button" href="/api/account/export" target="_blank" rel="noreferrer">
                   Exportar dados
                 </a>

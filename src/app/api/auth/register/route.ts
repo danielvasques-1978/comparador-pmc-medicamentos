@@ -24,11 +24,16 @@ export async function POST(request: NextRequest) {
     const rows = await sql`
       insert into auth_users (email, password_hash, terms_accepted_at, privacy_accepted_at)
       values (${normalizedEmail}, ${hashPassword(password)}, now(), now())
-      returning id, email, plan_status
+      returning id, email, plan_status, subscription_current_period_end
     `;
 
     const response = NextResponse.json({
-      user: { id: rows[0].id, email: rows[0].email, planStatus: rows[0].plan_status },
+      user: {
+        id: rows[0].id,
+        email: rows[0].email,
+        planStatus: rows[0].plan_status,
+        subscriptionCurrentPeriodEnd: rows[0].subscription_current_period_end,
+      },
     });
     await createSession(sql, rows[0].id as string, response);
     return response;

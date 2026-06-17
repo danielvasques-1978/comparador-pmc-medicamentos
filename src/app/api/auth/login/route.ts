@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
   const normalizedEmail = normalizeEmail(email ?? "");
   const rows = await sql`
-    select id, email, password_hash, plan_status
+    select id, email, password_hash, plan_status, subscription_current_period_end
     from auth_users
     where email = ${normalizedEmail} and deleted_at is null
     limit 1
@@ -25,7 +25,12 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.json({
-    user: { id: user.id, email: user.email, planStatus: user.plan_status },
+    user: {
+      id: user.id,
+      email: user.email,
+      planStatus: user.plan_status,
+      subscriptionCurrentPeriodEnd: user.subscription_current_period_end,
+    },
   });
   await createSession(sql, user.id as string, response);
   return response;

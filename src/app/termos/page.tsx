@@ -17,8 +17,11 @@ export default function TermsPage() {
         <p>O usuário é responsável por manter sua senha protegida. A conta pode ser excluída a qualquer momento.</p>
         <h2>Dados e fonte</h2>
         <p>A base é importada de PDF fornecido pelo operador. A página de revisão indica data da tabela e validação crítica.</p>
-        <h2>Cobrança futura</h2>
-        <p>O serviço está preparado para assinatura futura, mas nenhuma cobrança é feita sem contratação explícita.</p>
+        <h2>Assinatura</h2>
+        <p>
+          Recursos pagos, quando ativados, exigem contratação explícita pelo Stripe Checkout. Cancelamento,
+          atualização de cartão e recibos são gerenciados pelo portal de assinatura.
+        </p>
         <h2>Limitações</h2>
         <p>Falhas de importação devem ser revisadas antes de uso profissional. Medicamentos críticos possuem validação própria.</p>
       </section>

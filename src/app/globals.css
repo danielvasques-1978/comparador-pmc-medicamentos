@@ -253,6 +253,29 @@ h1 {
   justify-content: flex-end;
 }
 
+.paywall-strip {
+  align-items: center;
+  background: #fff8e8;
+  border: 1px solid #f0d28f;
+  border-radius: 8px;
+  color: #4d3a12;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 14px 0;
+  padding: 14px 16px;
+}
+
+.paywall-strip div {
+  display: grid;
+  gap: 4px;
+}
+
+.paywall-strip span {
+  color: #72551c;
+  font-size: 0.9rem;
+}
+
 .table-header {
   align-items: center;
   display: flex;
@@ -517,6 +540,33 @@ h1 {
   margin-top: 12px;
 }
 
+.plan-card {
+  align-items: center;
+  background: #f7fafb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px;
+  width: 100%;
+}
+
+.plan-card div {
+  display: grid;
+  gap: 3px;
+}
+
+.plan-card span,
+.plan-card small {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.plan-card strong {
+  color: var(--text);
+}
+
 .danger-button {
   align-items: center;
   background: #fff5f6;
@@ -759,7 +809,8 @@ h1 {
   }
 
   .topbar,
-  .table-header {
+  .table-header,
+  .paywall-strip {
     align-items: stretch;
     flex-direction: column;
   }
