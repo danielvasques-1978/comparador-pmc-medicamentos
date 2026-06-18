@@ -603,6 +603,17 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
         </div>
       </section>
 
+      <section className="pmc-notice" aria-label="Aviso sobre o preço PMC">
+        <ShieldCheck size={22} />
+        <div>
+          <strong>PMC é o preço máximo ao consumidor, não o preço praticado pela farmácia.</strong>
+          <p>
+            Os preços podem variar entre farmácias. Programas de desconto também variam conforme laboratório,
+            apresentação e regras do programa, e podem exigir cadastro ou cupom apresentado pelo paciente.
+          </p>
+        </div>
+      </section>
+
       <section className="control-panel">
         <form className="search-row" onSubmit={submitSearch}>
           <label className="search-box">
@@ -977,7 +988,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
         </div>
       ) : null}
       <footer className="app-footer">
-        <span>PMC é preço máximo ao consumidor, não preço praticado pela farmácia.</span>
+        <span>Consulte o preço final e as condições de desconto diretamente na farmácia.</span>
         <a href="/termos">Termos</a>
         <a href="/privacidade">Privacidade</a>
       </footer>

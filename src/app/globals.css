@@ -90,6 +90,39 @@ h1 {
   gap: 10px;
 }
 
+.pmc-notice {
+  align-items: flex-start;
+  background: #fff8e8;
+  border: 1px solid #e7c56f;
+  border-left: 5px solid var(--amber);
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+}
+
+.pmc-notice svg {
+  color: var(--amber);
+  flex: 0 0 auto;
+}
+
+.pmc-notice div {
+  display: grid;
+  gap: 5px;
+}
+
+.pmc-notice strong {
+  color: #49350e;
+  font-size: 1rem;
+}
+
+.pmc-notice p {
+  color: #6f531c;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 .icon-button,
 .ghost-button,
 .primary-button,
