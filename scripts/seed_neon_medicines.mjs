@@ -13,9 +13,12 @@ if (!databaseUrl) {
 
 const sql = neon(databaseUrl);
 const dataPath = path.join(process.cwd(), "src", "data", "medicines.json");
-const manualDataPath = path.join(process.cwd(), "src", "data", "manual-critical-medicines.json");
+const manualDataPaths = [
+  path.join(process.cwd(), "src", "data", "manual-critical-medicines.json"),
+  path.join(process.cwd(), "src", "data", "manual-medicines.json"),
+];
 const rawMedicines = JSON.parse(fs.readFileSync(dataPath, "utf8"));
-const manualMedicines = JSON.parse(fs.readFileSync(manualDataPath, "utf8"));
+const manualMedicines = manualDataPaths.flatMap((filePath) => JSON.parse(fs.readFileSync(filePath, "utf8")));
 
 function normalize(value) {
   return value

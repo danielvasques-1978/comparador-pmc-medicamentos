@@ -1,5 +1,6 @@
 import fallbackMedicines from "@/data/medicines.json";
 import manualCriticalMedicines from "@/data/manual-critical-medicines.json";
+import manualMedicines from "@/data/manual-medicines.json";
 import { getSql } from "@/lib/neon";
 import type { IcmsZone, Medicine } from "@/lib/types";
 
@@ -39,13 +40,14 @@ function cleanMedicine(medicine: Medicine) {
 }
 
 function cleanMedicines(medicines: Medicine[]) {
-  const manualIds = new Set((manualCriticalMedicines as Medicine[]).map((medicine) => medicine.id));
+  const supplements = [...(manualCriticalMedicines as Medicine[]), ...(manualMedicines as Medicine[])];
+  const manualIds = new Set(supplements.map((medicine) => medicine.id));
   const cleaned = medicines.flatMap((medicine) => {
     if (manualIds.has(medicine.id)) return [];
     const cleaned = cleanMedicine(medicine);
     return cleaned ? [cleaned] : [];
   });
-  return [...cleaned, ...(manualCriticalMedicines as Medicine[])];
+  return [...cleaned, ...supplements];
 }
 
 export async function getMedicines() {

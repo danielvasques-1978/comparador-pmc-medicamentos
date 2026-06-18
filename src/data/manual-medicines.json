@@ -1,0 +1,110 @@
+[
+  {
+    "id": "manual-resfenol-hertz-caps-10-172",
+    "name": "RESFENOL",
+    "activeIngredient": "CLORFENIRAMINA + FENILEFRINA + PARACETAMOL",
+    "laboratory": "HERTZ",
+    "kind": "Similar",
+    "presentation": "400mg + 4mg + 4mg Caps. gel dura ct bl al/pvc x 10",
+    "pmc": { "20": 15.95, "18": 15.56, "17": 15.37, "12": 15.37 },
+    "sourcePage": 172,
+    "source": "Suplemento Kairos 451 - correção manual",
+    "tableDate": "Junho/2026"
+  },
+  {
+    "id": "manual-resfenol-hertz-caps-20-172",
+    "name": "RESFENOL",
+    "activeIngredient": "CLORFENIRAMINA + FENILEFRINA + PARACETAMOL",
+    "laboratory": "HERTZ",
+    "kind": "Similar",
+    "presentation": "400mg + 4mg + 4mg Caps. gel dura bl al/pvc x 20",
+    "pmc": { "20": 32.03, "18": 31.26, "17": 30.88, "12": 30.88 },
+    "sourcePage": 172,
+    "source": "Suplemento Kairos 451 - correção manual",
+    "tableDate": "Junho/2026"
+  },
+  {
+    "id": "manual-resfenol-hertz-caps-120-172",
+    "name": "RESFENOL",
+    "activeIngredient": "CLORFENIRAMINA + FENILEFRINA + PARACETAMOL",
+    "laboratory": "HERTZ",
+    "kind": "Similar",
+    "presentation": "400mg + 4mg + 4mg Caps. gel dura bl al/pvc x 120",
+    "pmc": { "20": 215.05, "18": 209.79, "17": 207.27, "12": 207.27 },
+    "sourcePage": 172,
+    "source": "Suplemento Kairos 451 - correção manual",
+    "tableDate": "Junho/2026"
+  },
+  {
+    "id": "manual-resfenol-hertz-caps-200-172",
+    "name": "RESFENOL",
+    "activeIngredient": "CLORFENIRAMINA + FENILEFRINA + PARACETAMOL",
+    "laboratory": "HERTZ",
+    "kind": "Similar",
+    "presentation": "400mg + 4mg + 4mg Caps. gel dura x 200",
+    "pmc": { "20": 293.82, "18": 286.66, "17": 283.2, "12": 283.2 },
+    "sourcePage": 172,
+    "source": "Suplemento Kairos 451 - correção manual",
+    "tableDate": "Junho/2026"
+  },
+  {
+    "id": "manual-resfenol-hertz-caps-240-172",
+    "name": "RESFENOL",
+    "activeIngredient": "CLORFENIRAMINA + FENILEFRINA + PARACETAMOL",
+    "laboratory": "HERTZ",
+    "kind": "Similar",
+    "presentation": "400mg + 4mg + 4mg Caps. gel dura ct bl al/pvc x 240",
+    "pmc": { "20": 509.11, "18": 496.69, "17": 490.71, "12": 490.71 },
+    "sourcePage": 172,
+    "source": "Suplemento Kairos 451 - correção manual",
+    "tableDate": "Junho/2026"
+  },
+  {
+    "id": "manual-resfenol-hertz-po-5-envelopes-172",
+    "name": "RESFENOL",
+    "activeIngredient": "CLORFENIRAMINA + FENILEFRINA + PARACETAMOL",
+    "laboratory": "HERTZ",
+    "kind": "Similar",
+    "presentation": "400mg + 4mg + 4mg Pó sol. oral ct 5 env al pl x 5g",
+    "pmc": { "20": 23.42, "18": 22.85, "17": 22.56, "12": 22.56 },
+    "sourcePage": 172,
+    "source": "Suplemento Kairos 451 - correção manual",
+    "tableDate": "Junho/2026"
+  },
+  {
+    "id": "manual-resfenol-hertz-sol-100ml-172",
+    "name": "RESFENOL",
+    "activeIngredient": "CLORFENIRAMINA + FENILEFRINA + PARACETAMOL",
+    "laboratory": "HERTZ",
+    "kind": "Similar",
+    "presentation": "40mg + 0,6mg + 0,6mg/ml Sol. oral ct fr vd amb x 100ml",
+    "pmc": { "20": 33.66, "18": 32.84, "17": 32.44, "12": 32.44 },
+    "sourcePage": 172,
+    "source": "Suplemento Kairos 451 - correção manual",
+    "tableDate": "Junho/2026"
+  },
+  {
+    "id": "manual-resfenol-po-hertz-sache-50-172",
+    "name": "RESFENOL PÓ",
+    "activeIngredient": "CLORFENIRAMINA + FENILEFRINA + PARACETAMOL",
+    "laboratory": "HERTZ",
+    "kind": "Similar",
+    "presentation": "400mg + 4mg + 4mg/g Pó sol. oral cx 50 sach x 5g",
+    "pmc": { "20": 283.28, "18": 276.37, "17": 273.03, "12": 273.03 },
+    "sourcePage": 172,
+    "source": "Suplemento Kairos 451 - correção manual",
+    "tableDate": "Junho/2026"
+  },
+  {
+    "id": "manual-resfenol-thermus-hertz-50-172",
+    "name": "RESFENOL THERMUS",
+    "activeIngredient": "PARACETAMOL",
+    "laboratory": "HERTZ",
+    "kind": "Similar",
+    "presentation": "Cx. c/1 x 50",
+    "pmc": { "20": 262.74, "18": 256.33, "17": 253.24, "12": 253.24 },
+    "sourcePage": 172,
+    "source": "Suplemento Kairos 451 - correção manual",
+    "tableDate": "Junho/2026"
+  }
+]

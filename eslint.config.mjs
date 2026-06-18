@@ -6,6 +6,7 @@ export default [
     ignores: [
       ".next/**",
       ".next-app/**",
+      ".next-local/**",
       "node_modules/**",
       ".npm-cache/**",
       ".appdata/**",
