@@ -52,10 +52,6 @@ const strictSearchTokens = new Set(
   criticalMedicines.flatMap((item) => [item.query, ...item.allowed].flatMap((value) => textTokens(value))),
 );
 
-function matchingCriticalSearch(search: string) {
-  return criticalMedicines.find((item) => tokensMatchText(search, item.query));
-}
-
 function normalize(value: string) {
   return value
     .normalize("NFD")
@@ -68,6 +64,10 @@ function textTokens(value: string) {
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .split(/\s+/)
     .filter(Boolean);
+}
+
+function queryTokens(search: string) {
+  return textTokens(search).filter((token) => token.length >= 3);
 }
 
 function tokenMatchesText(queryToken: string, textToken: string) {
@@ -89,57 +89,8 @@ function matchesSearch(item: Medicine, search: string) {
   return tokensMatchText(search, `${item.name} ${item.activeIngredient}`);
 }
 
-function matchesDirectSearch(item: Medicine, search: string) {
-  if (!search) return false;
-  return tokensMatchText(search, `${item.name} ${item.activeIngredient}`);
-}
-
-function ingredientTokens(item: Medicine) {
-  const labTokens = new Set(normalize(item.laboratory).split(/\s+/));
-  const ignored = new Set([
-    "acido",
-    "clor",
-    "clorid",
-    "cloridrato",
-    "cloreto",
-    "carbonato",
-    "de",
-    "di",
-    "do",
-    "da",
-    "e",
-    "gen",
-    "generico",
-    "generica",
-    "monoidratada",
-    "monoidratado",
-    "sodica",
-    "sodico",
-  ]);
-
-  return normalize(item.activeIngredient)
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter((token) => token.length >= 4 && !ignored.has(token) && !labTokens.has(token));
-}
-
-function queryTokens(search: string) {
-  return search
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter((token) => token.length >= 3);
-}
-
-function tokenMatchesQuery(token: string, tokens: string[]) {
-  return tokens.some((queryToken) => {
-    if (strictSearchTokens.has(queryToken)) return token === queryToken;
-    return token.startsWith(queryToken);
-  });
-}
-
-function matchesRelatedIngredient(item: Medicine, relatedTokens: Set<string>) {
-  if (relatedTokens.size === 0) return false;
-  return ingredientTokens(item).some((token) => relatedTokens.has(token));
+function matchesRelatedIngredient(item: Medicine, relatedIngredients: Set<string>) {
+  return relatedIngredients.has(normalize(item.activeIngredient));
 }
 
 function inferForm(presentation: string) {
@@ -247,25 +198,17 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
   const hasSearch = normalize(activeQuery).length >= 2;
   const hasPaidAccess = !billingEnabled || !billingRequired || planStatus === "active" || planStatus === "trialing";
 
-  const relatedIngredientTokens = useMemo(() => {
+  const relatedIngredients = useMemo(() => {
     const search = normalize(activeQuery);
     if (!search) return new Set<string>();
 
-    const matchingTokens = new Set<string>();
-    const fallbackTokens = new Set<string>();
-    const searchTokens = queryTokens(search);
-    const criticalSearch = matchingCriticalSearch(search);
-    criticalSearch?.allowed.forEach((value) => {
-      textTokens(value).forEach((token) => matchingTokens.add(token));
-    });
+    const ingredients = new Set<string>();
     medicines.forEach((item) => {
-      if (!matchesDirectSearch(item, search)) return;
-      const itemTokens = ingredientTokens(item);
-      const matchingIngredientTokens = itemTokens.filter((token) => tokenMatchesQuery(token, searchTokens));
-      matchingIngredientTokens.forEach((token) => matchingTokens.add(token));
-      itemTokens.forEach((token) => fallbackTokens.add(token));
+      if (tokensMatchText(search, item.name) || tokensMatchText(search, item.activeIngredient)) {
+        ingredients.add(normalize(item.activeIngredient));
+      }
     });
-    return matchingTokens.size > 0 ? matchingTokens : fallbackTokens;
+    return ingredients;
   }, [activeQuery, medicines]);
 
   const formOptions = useMemo(() => {
@@ -284,13 +227,13 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     const labs = new Set<string>();
     medicines.forEach((item) => {
       if (!search && !onlyFavorites) return;
-      if (!matchesSearch(item, search) && !matchesRelatedIngredient(item, relatedIngredientTokens)) return;
+      if (!matchesSearch(item, search) && !matchesRelatedIngredient(item, relatedIngredients)) return;
       if (kind !== "Todos" && item.kind !== kind) return;
       if (form !== "Todas" && inferForm(item.presentation) !== form) return;
       labs.add(item.laboratory);
     });
     return ["Todos", ...Array.from(labs).sort((a, b) => a.localeCompare(b, "pt-BR"))];
-  }, [activeQuery, form, kind, medicines, onlyFavorites, relatedIngredientTokens]);
+  }, [activeQuery, form, kind, medicines, onlyFavorites, relatedIngredients]);
 
   useEffect(() => {
     if (!labOptions.includes(lab)) setLab("Todos");
@@ -310,7 +253,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
       if (form !== "Todas" && inferForm(item.presentation) !== form) return false;
       const price = item.pmc[selectedZone] ?? 0;
       if (max !== null && Number.isFinite(max) && price > max) return false;
-      return matchesSearch(item, search) || matchesRelatedIngredient(item, relatedIngredientTokens);
+      return matchesSearch(item, search) || matchesRelatedIngredient(item, relatedIngredients);
     });
 
     rows.sort((a, b) => {
@@ -328,7 +271,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     });
 
     return rows;
-  }, [activeQuery, favorites, form, hasPaidAccess, kind, lab, maxPrice, medicines, onlyFavorites, relatedIngredientTokens, selectedZone, sortMode]);
+  }, [activeQuery, favorites, form, hasPaidAccess, kind, lab, maxPrice, medicines, onlyFavorites, relatedIngredients, selectedZone, sortMode]);
 
   const visibleRows = filtered.slice(0, 250);
 

@@ -20,6 +20,7 @@ type PreparedMedicine = {
   medicine: Medicine;
   searchableTokens: string[];
   ingredientTokens: string[];
+  activeIngredientKey: string;
 };
 
 function normalize(value: string) {
@@ -45,16 +46,6 @@ function queryTokens(search: string) {
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .split(/\s+/)
     .filter((token) => token.length >= 3);
-}
-
-function tokensMatchText(search: string, text: string) {
-  const searchTokens = queryTokens(search);
-  const searchableTokens = textTokens(text);
-  return searchTokens.every((queryToken) =>
-    searchableTokens.some((textToken) =>
-      strictSearchTokens.has(queryToken) ? textToken === queryToken : textToken.startsWith(queryToken),
-    ),
-  );
 }
 
 function ingredientTokens(item: Medicine) {
@@ -91,6 +82,7 @@ function prepareMedicines(medicines: Medicine[]): PreparedMedicine[] {
     medicine,
     searchableTokens: textTokens(`${medicine.name} ${medicine.activeIngredient}`),
     ingredientTokens: ingredientTokens(medicine),
+    activeIngredientKey: normalize(medicine.activeIngredient),
   }));
 }
 
@@ -103,35 +95,19 @@ function preparedTokensMatchText(search: string, item: PreparedMedicine) {
   );
 }
 
-function relatedIngredientTokens(search: string, medicines: PreparedMedicine[]) {
-  const searchTokens = queryTokens(search);
-  const matchingTokens = new Set<string>();
-  const fallbackTokens = new Set<string>();
-  const criticalSearch = criticalMedicines.find((item) => tokensMatchText(search, item.query));
-
-  criticalSearch?.allowed.forEach((value) => {
-    textTokens(value).forEach((token) => matchingTokens.add(token));
-  });
-
+function relatedIngredientKeys(search: string, medicines: PreparedMedicine[]) {
+  const ingredients = new Set<string>();
   for (const item of medicines) {
     if (!preparedTokensMatchText(search, item)) continue;
-    const matchingIngredientTokens = item.ingredientTokens.filter((token) =>
-      searchTokens.some((queryToken) =>
-        strictSearchTokens.has(queryToken) ? token === queryToken : token.startsWith(queryToken),
-      ),
-    );
-    matchingIngredientTokens.forEach((token) => matchingTokens.add(token));
-    item.ingredientTokens.forEach((token) => fallbackTokens.add(token));
+    ingredients.add(item.activeIngredientKey);
   }
-
-  return matchingTokens.size > 0 ? matchingTokens : fallbackTokens;
+  return ingredients;
 }
 
 function searchResults(query: string, medicines: PreparedMedicine[]) {
-  const relatedTokens = relatedIngredientTokens(query, medicines);
+  const relatedIngredients = relatedIngredientKeys(query, medicines);
   return medicines.filter(
-    (item) =>
-      preparedTokensMatchText(query, item) || item.ingredientTokens.some((token) => relatedTokens.has(token)),
+    (item) => preparedTokensMatchText(query, item) || relatedIngredients.has(item.activeIngredientKey),
   );
 }
 

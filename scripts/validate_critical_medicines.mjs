@@ -67,39 +67,21 @@ function ingredientTokens(item) {
   );
 }
 
-function relatedIngredientTokens(search) {
-  const searchTokens = queryTokens(search);
-  const matchingTokens = new Set();
-  const fallbackTokens = new Set();
-  const criticalSearch = criticalMedicines.find((item) => tokensMatchText(search, item.query));
-
-  if (criticalSearch) {
-    for (const value of criticalSearch.allowed) {
-      for (const token of textTokens(value)) matchingTokens.add(token);
-    }
-  }
-
+function relatedIngredientKeys(search) {
+  const ingredients = new Set();
   for (const item of medicines) {
     if (!tokensMatchText(search, `${item.name} ${item.activeIngredient}`)) continue;
-    const itemTokens = ingredientTokens(item);
-    const matchingIngredientTokens = itemTokens.filter((token) =>
-      searchTokens.some((queryToken) =>
-        strictSearchTokens.has(queryToken) ? token === queryToken : token.startsWith(queryToken),
-      ),
-    );
-    for (const token of matchingIngredientTokens) matchingTokens.add(token);
-    for (const token of itemTokens) fallbackTokens.add(token);
+    ingredients.add(normalize(item.activeIngredient));
   }
-
-  return matchingTokens.size > 0 ? matchingTokens : fallbackTokens;
+  return ingredients;
 }
 
 function searchResults(query) {
-  const relatedTokens = relatedIngredientTokens(query);
+  const relatedIngredients = relatedIngredientKeys(query);
   return medicines.filter(
     (item) =>
       tokensMatchText(query, `${item.name} ${item.activeIngredient}`) ||
-      ingredientTokens(item).some((token) => relatedTokens.has(token)),
+      relatedIngredients.has(normalize(item.activeIngredient)),
   );
 }
 
