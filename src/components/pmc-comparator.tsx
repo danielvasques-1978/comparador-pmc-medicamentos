@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import criticalMedicines from "@/data/critical-medicines.json";
-import { defaultUfIcmsMap, icmsRates, isIcmsRate, resolvePricingZone, ufCodes } from "@/lib/icms";
+import { defaultUfIcmsMap, icmsRates, isIcmsRate, ufCodes } from "@/lib/icms";
 import type { IcmsRate, Medicine, UfCode, UfIcmsMap } from "@/lib/types";
 
 type SortMode = "group-lab" | "price-asc" | "price-desc" | "name";
@@ -241,8 +241,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
   }, []);
 
   const selectedRate = ufMap[uf] ?? defaultUfIcmsMap[uf];
-  const selectedZone = resolvePricingZone(selectedRate);
-  const usesExactIcmsColumn = selectedRate === selectedZone;
+  const selectedZone = selectedRate;
   const tableDate = medicines[0]?.tableDate ?? "Não informada";
   const activeQuery = query.trim();
   const hasSearch = normalize(activeQuery).length >= 2;
@@ -274,6 +273,11 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     medicines.forEach((item) => forms.add(inferForm(item.presentation)));
     return ["Todas", ...Array.from(forms).sort((a, b) => a.localeCompare(b, "pt-BR"))];
   }, [medicines]);
+
+  const kindOptions = useMemo(
+    () => ["Todos", ...Array.from(new Set(medicines.map((item) => item.kind))).sort((a, b) => a.localeCompare(b, "pt-BR"))],
+    [medicines],
+  );
 
   const labOptions = useMemo(() => {
     const search = normalize(activeQuery);
@@ -545,7 +549,6 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
       "Apresentacao",
       "UF",
       "ICMS UF",
-      "Coluna PMC",
       "PMC",
     ];
     const lines = visibleRows.map((item) =>
@@ -557,7 +560,6 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
         item.presentation,
         uf,
         formatRate(selectedRate),
-        formatRate(selectedZone),
         String(item.pmc[selectedZone] ?? ""),
       ]
         .map((value) => `"${String(value).replaceAll('"', '""')}"`)
@@ -654,10 +656,9 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
           <label className="select-field">
             <span>Tipo</span>
             <select value={kind} onChange={(event) => setKind(event.target.value)}>
-              <option>Todos</option>
-              <option>Genérico</option>
-              <option>Similar</option>
-              <option>Referência</option>
+              {kindOptions.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
             </select>
           </label>
           <label className="select-field">
@@ -709,7 +710,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
         <div>
           <strong>{uf}</strong>
           <span>
-            ICMS {formatRate(selectedRate)}{usesExactIcmsColumn ? "" : ` | PMC ${formatRate(selectedZone)}`}
+            ICMS {formatRate(selectedRate)}
           </span>
         </div>
         <div>
@@ -797,13 +798,10 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
                   </div>
                   <div className="medicine-meta">
                     <span>{item.laboratory}</span>
-                    <small>Página {item.sourcePage}</small>
+                    <small>GGREM {item.ggremCode ?? item.id}</small>
                   </div>
                   <div className="price-cell">
-                  <small>
-                    PMC {uf}
-                    {usesExactIcmsColumn ? "" : ` | coluna ${formatRate(selectedZone)}`}
-                  </small>
+                  <small>PMC {uf} | ICMS {formatRate(selectedRate)}</small>
                   <strong>{currency.format(item.pmc[selectedZone] ?? 0)}</strong>
                   </div>
                 </article>
@@ -838,7 +836,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
               </button>
             </div>
             <p className="modal-copy">
-              O suplemento importado traz PMC para 20%, 18%, 17% e 12%. A alíquota da UF fica registrada aqui; quando não houver coluna exata no PDF, o app usa a coluna mais próxima e informa isso no resultado.
+              A planilha oficial da CMED traz uma coluna PMC específica para cada alíquota disponível abaixo. A seleção da UF aplica diretamente a coluna correspondente, sem aproximação.
             </p>
             <div className="uf-grid">
               {ufCodes.map((code) => (

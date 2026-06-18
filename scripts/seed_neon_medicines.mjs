@@ -13,49 +13,13 @@ if (!databaseUrl) {
 
 const sql = neon(databaseUrl);
 const dataPath = path.join(process.cwd(), "src", "data", "medicines.json");
-const manualDataPaths = [
-  path.join(process.cwd(), "src", "data", "manual-critical-medicines.json"),
-  path.join(process.cwd(), "src", "data", "manual-medicines.json"),
-];
 const rawMedicines = JSON.parse(fs.readFileSync(dataPath, "utf8"));
-const manualMedicines = manualDataPaths.flatMap((filePath) => JSON.parse(fs.readFileSync(filePath, "utf8")));
-
-function normalize(value) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function cleanMedicine(medicine) {
-  const name = normalize(medicine.name);
-  const activeIngredient = normalize(medicine.activeIngredient);
-
-  if (name.includes("prometazina") && name.includes("exp")) {
-    return null;
-  }
-
-  if (name.includes("desvenlafaxina") && activeIngredient === "venlafaxina") {
-    return { ...medicine, activeIngredient: "DESVENLAFAXINA" };
-  }
-
-  return medicine;
-}
-
-const manualIds = new Set(manualMedicines.map((item) => item.id));
-const medicines = [
-  ...rawMedicines.flatMap((item) => {
-    if (manualIds.has(item.id)) return [];
-    const cleaned = cleanMedicine(item);
-    return cleaned ? [cleaned] : [];
-  }),
-  ...manualMedicines,
-];
+const medicines = rawMedicines;
 const first = medicines[0];
 
 const importRows = await sql`
   insert into price_imports (source_name, source_file, table_date, row_count)
-  values (${first?.source ?? "Fonte importada"}, ${"Suplemento-451.pdf"}, ${first?.tableDate ?? "Não informada"}, ${medicines.length})
+  values (${first?.source ?? "CMED/Anvisa"}, ${"Lista de preços CMED.xlsx"}, ${first?.tableDate ?? "Não informada"}, ${medicines.length})
   returning id
 `;
 
@@ -81,8 +45,12 @@ async function runBatch(batch, index) {
             active_ingredient,
             laboratory,
             kind,
+            product_type,
             presentation,
             pmc,
+            ggrem_code,
+            registration,
+            commercialized,
             source_page,
             source,
             table_date
@@ -94,8 +62,12 @@ async function runBatch(batch, index) {
             ${item.activeIngredient},
             ${item.laboratory},
             ${item.kind},
+            ${item.productType ?? item.kind},
             ${item.presentation},
             ${JSON.stringify(item.pmc)}::jsonb,
+            ${item.ggremCode ?? item.id},
+            ${item.registration ?? null},
+            ${item.commercialized ?? null},
             ${item.sourcePage},
             ${item.source},
             ${item.tableDate}
@@ -106,8 +78,12 @@ async function runBatch(batch, index) {
             active_ingredient = excluded.active_ingredient,
             laboratory = excluded.laboratory,
             kind = excluded.kind,
+            product_type = excluded.product_type,
             presentation = excluded.presentation,
             pmc = excluded.pmc,
+            ggrem_code = excluded.ggrem_code,
+            registration = excluded.registration,
+            commercialized = excluded.commercialized,
             source_page = excluded.source_page,
             source = excluded.source,
             table_date = excluded.table_date
@@ -127,5 +103,7 @@ for (let index = 0; index < medicines.length; index += batchSize) {
   await runBatch(batch, index);
   console.log(`Seeded ${Math.min(index + batch.length, medicines.length)} / ${medicines.length}`);
 }
+
+await sql`delete from medicines where import_id is distinct from ${importId}`;
 
 console.log("Neon seed complete.");

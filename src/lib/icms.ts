@@ -30,8 +30,8 @@ export const ufCodes: UfCode[] = [
   "TO",
 ];
 
-export const icmsZones: IcmsZone[] = ["20", "18", "17", "12"];
 export const icmsRates: IcmsRate[] = ["17", "18", "19", "19.5", "20", "20.5", "22.5", "23"];
+export const icmsZones: IcmsZone[] = icmsRates;
 
 export const defaultUfIcmsMap: UfIcmsMap = {
   AC: "19",
@@ -72,12 +72,5 @@ export function isIcmsRate(value: string): value is IcmsRate {
 }
 
 export function resolvePricingZone(rate: IcmsRate): IcmsZone {
-  const numericRate = Number(rate);
-  return icmsZones.reduce((best, zone) => {
-    const currentDistance = Math.abs(Number(zone) - numericRate);
-    const bestDistance = Math.abs(Number(best) - numericRate);
-    if (currentDistance < bestDistance) return zone;
-    if (currentDistance === bestDistance && Number(zone) > Number(best)) return zone;
-    return best;
-  }, icmsZones[0]);
+  return rate;
 }

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "import:cmed": "python scripts/import_cmed_xlsx.py",
     "migrate:neon": "node scripts/migrate_neon.mjs",
     "seed:neon": "node scripts/seed_neon_medicines.mjs",
     "validate:critical": "node scripts/validate_critical_medicines.mjs"

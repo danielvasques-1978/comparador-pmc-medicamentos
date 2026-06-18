@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Comparador PMC Medicamentos",
-  description: "Comparador local de PMC por zona de ICMS a partir de suplemento importado.",
+  description: "Comparador de PMC por UF e alíquota de ICMS com dados oficiais da CMED/Anvisa.",
 };
 
 export default function RootLayout({

@@ -14,5 +14,6 @@ build/
 .vercel/
 *.tsbuildinfo
 *.log
+tmp/
 
 .vercel

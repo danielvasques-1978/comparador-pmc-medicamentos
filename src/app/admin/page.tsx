@@ -36,7 +36,7 @@ export default async function AdminPage() {
   const medicines = await getMedicines();
   const report = validateCriticalMedicines(medicines);
   const tableDate = medicines[0]?.tableDate ?? "Não informada";
-  const manualCorrections = medicines.filter((item) => item.source.includes("correção manual")).length;
+  const commercialized = medicines.filter((item) => item.commercialized).length;
   const hasBlocker = report.invalid > 0;
   const absentItems = report.items.filter((item) => item.status === "absent");
   const invalidItems = report.items.filter((item) => item.status === "invalid");
@@ -87,8 +87,8 @@ export default async function AdminPage() {
           <UploadCloud size={22} />
         </div>
         <ol className="admin-steps">
-          <li>Exportar o PDF mensal do Kairos.</li>
-          <li>Rodar a extração local para atualizar `src/data/medicines.json`.</li>
+          <li>Baixar a planilha XLS da lista de preços no portal da CMED/Anvisa.</li>
+          <li>Rodar a importação oficial para atualizar `src/data/medicines.json`.</li>
           <li>Executar `npm run validate:critical` antes de carregar o Neon.</li>
           <li>Se passar sem bloqueios, rodar `npm run seed:neon` e publicar na Vercel.</li>
         </ol>
@@ -106,7 +106,7 @@ export default async function AdminPage() {
         <div className="admin-status-row">
           <span>{report.ok} medicamentos críticos validados</span>
           <span>{report.absent} ausentes na base atual</span>
-          <span>{manualCorrections} registros suplementares</span>
+          <span>{commercialized.toLocaleString("pt-BR")} comercializadas em 2025</span>
         </div>
 
         {invalidItems.length > 0 ? (

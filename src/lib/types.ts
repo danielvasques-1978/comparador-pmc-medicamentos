@@ -1,4 +1,3 @@
-export type IcmsZone = "20" | "18" | "17" | "12";
 export type IcmsRate =
   | "17"
   | "18"
@@ -9,14 +8,20 @@ export type IcmsRate =
   | "22.5"
   | "23";
 
+export type IcmsZone = IcmsRate;
+
 export type Medicine = {
   id: string;
   name: string;
   activeIngredient: string;
   laboratory: string;
-  kind: "Genérico" | "Similar" | "Referência";
+  kind: string;
+  productType?: string;
   presentation: string;
   pmc: Record<IcmsZone, number>;
+  ggremCode?: string;
+  registration?: string;
+  commercialized?: boolean;
   sourcePage: number;
   source: string;
   tableDate: string;

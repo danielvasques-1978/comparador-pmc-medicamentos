@@ -734,7 +734,8 @@
     "label": "Lemborexant",
     "query": "lemborexant",
     "allowed": [
-      "lemborexant"
+      "lemborexant",
+      "lemborexante"
     ]
   },
   {

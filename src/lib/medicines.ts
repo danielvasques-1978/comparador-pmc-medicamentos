@@ -1,6 +1,4 @@
 import fallbackMedicines from "@/data/medicines.json";
-import manualCriticalMedicines from "@/data/manual-critical-medicines.json";
-import manualMedicines from "@/data/manual-medicines.json";
 import { getSql } from "@/lib/neon";
 import type { IcmsZone, Medicine } from "@/lib/types";
 
@@ -10,49 +8,20 @@ type MedicineRow = {
   active_ingredient: string;
   laboratory: string;
   kind: Medicine["kind"];
+  product_type: string | null;
   presentation: string;
   pmc: Record<IcmsZone, number>;
+  ggrem_code: string | null;
+  registration: string | null;
+  commercialized: boolean | null;
   source_page: number;
   source: string;
   table_date: string;
 };
 
-function normalize(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function cleanMedicine(medicine: Medicine) {
-  const name = normalize(medicine.name);
-  const activeIngredient = normalize(medicine.activeIngredient);
-
-  if (name.includes("prometazina") && name.includes("exp")) {
-    return null;
-  }
-
-  if (name.includes("desvenlafaxina") && activeIngredient === "venlafaxina") {
-    return { ...medicine, activeIngredient: "DESVENLAFAXINA" };
-  }
-
-  return medicine;
-}
-
-function cleanMedicines(medicines: Medicine[]) {
-  const supplements = [...(manualCriticalMedicines as Medicine[]), ...(manualMedicines as Medicine[])];
-  const manualIds = new Set(supplements.map((medicine) => medicine.id));
-  const cleaned = medicines.flatMap((medicine) => {
-    if (manualIds.has(medicine.id)) return [];
-    const cleaned = cleanMedicine(medicine);
-    return cleaned ? [cleaned] : [];
-  });
-  return [...cleaned, ...supplements];
-}
-
 export async function getMedicines() {
   const sql = getSql();
-  if (!sql) return cleanMedicines(fallbackMedicines as Medicine[]);
+  if (!sql) return fallbackMedicines as Medicine[];
 
   try {
     const rows = await sql`
@@ -62,8 +31,12 @@ export async function getMedicines() {
         active_ingredient,
         laboratory,
         kind,
+        product_type,
         presentation,
         pmc,
+        ggrem_code,
+        registration,
+        commercialized,
         source_page,
         source,
         table_date
@@ -71,21 +44,25 @@ export async function getMedicines() {
       order by laboratory, name, presentation
     `;
 
-    if (rows.length === 0) return cleanMedicines(fallbackMedicines as Medicine[]);
+    if (rows.length === 0) return fallbackMedicines as Medicine[];
 
-    return cleanMedicines((rows as MedicineRow[]).map((row) => ({
+    return (rows as MedicineRow[]).map((row) => ({
       id: row.id,
       name: row.name,
       activeIngredient: row.active_ingredient,
       laboratory: row.laboratory,
       kind: row.kind,
+      productType: row.product_type ?? row.kind,
       presentation: row.presentation,
       pmc: row.pmc,
+      ggremCode: row.ggrem_code ?? row.id,
+      registration: row.registration ?? undefined,
+      commercialized: row.commercialized ?? undefined,
       sourcePage: row.source_page,
       source: row.source,
       tableDate: row.table_date,
-    })));
+    }));
   } catch {
-    return cleanMedicines(fallbackMedicines as Medicine[]);
+    return fallbackMedicines as Medicine[];
   }
 }

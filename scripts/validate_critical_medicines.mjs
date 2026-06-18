@@ -1,5 +1,4 @@
 import criticalMedicines from "../src/data/critical-medicines.json" with { type: "json" };
-import manualCriticalMedicines from "../src/data/manual-critical-medicines.json" with { type: "json" };
 import rawMedicines from "../src/data/medicines.json" with { type: "json" };
 
 function normalize(value) {
@@ -9,30 +8,7 @@ function normalize(value) {
     .toLowerCase();
 }
 
-function cleanMedicine(medicine) {
-  const name = normalize(medicine.name);
-  const activeIngredient = normalize(medicine.activeIngredient);
-
-  if (name.includes("prometazina") && name.includes("exp")) {
-    return null;
-  }
-
-  if (name.includes("desvenlafaxina") && activeIngredient === "venlafaxina") {
-    return { ...medicine, activeIngredient: "DESVENLAFAXINA" };
-  }
-
-  return medicine;
-}
-
-const manualIds = new Set(manualCriticalMedicines.map((medicine) => medicine.id));
-const medicines = [
-  ...rawMedicines.flatMap((medicine) => {
-    if (manualIds.has(medicine.id)) return [];
-    const cleaned = cleanMedicine(medicine);
-    return cleaned ? [cleaned] : [];
-  }),
-  ...manualCriticalMedicines,
-];
+const medicines = rawMedicines;
 
 function textTokens(value) {
   return normalize(value)

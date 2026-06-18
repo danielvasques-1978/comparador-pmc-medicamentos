@@ -1,5 +1,6 @@
 .env*
 *.log
+tmp
 node_modules
 .next
 .next-app
