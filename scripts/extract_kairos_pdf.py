@@ -72,6 +72,22 @@ KNOWN_LABS = [
     "TEVA",
 ]
 
+MONTHS = {
+    "janeiro": "Janeiro",
+    "fevereiro": "Fevereiro",
+    "março": "Março",
+    "marco": "Março",
+    "abril": "Abril",
+    "maio": "Maio",
+    "junho": "Junho",
+    "julho": "Julho",
+    "agosto": "Agosto",
+    "setembro": "Setembro",
+    "outubro": "Outubro",
+    "novembro": "Novembro",
+    "dezembro": "Dezembro",
+}
+
 
 @dataclass
 class Medicine:
@@ -119,6 +135,24 @@ def slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", ascii_value.lower()).strip("-")
 
 
+def read_cover_metadata(pdf_path: Path) -> tuple[str, str]:
+    reader = PdfReader(str(pdf_path))
+    cover = reader.pages[0].extract_text() or ""
+    source_match = re.search(r"Suplemento\s+n[úu]mero\s+(\d+)", cover, re.IGNORECASE)
+    date_match = re.search(
+        r"\b(" + "|".join(MONTHS) + r")\s+(\d{4})\b",
+        cover,
+        re.IGNORECASE,
+    )
+    source = f"Suplemento Kairos {source_match.group(1)}" if source_match else "Suplemento Kairos"
+    if date_match:
+        month = MONTHS[date_match.group(1).casefold()]
+        table_date = f"{month}/{date_match.group(2)}"
+    else:
+        table_date = "Não informada"
+    return source, table_date
+
+
 def infer_kind(header: str, presentation: str) -> str:
     text = f"{header} {presentation}".upper()
     if "GENÉRIC" in text or "GENERIC" in text or re.search(r"\bGEN\b", text):
@@ -156,7 +190,7 @@ def read_lines(pdf_path: Path) -> list[tuple[int, str]]:
     reader = PdfReader(str(pdf_path))
     lines: list[tuple[int, str]] = []
     for index, page in enumerate(reader.pages, start=1):
-        if index < 8 or index > 208:
+        if index < 8:
             continue
         text = page.extract_text() or ""
         for raw in text.splitlines():
@@ -167,6 +201,7 @@ def read_lines(pdf_path: Path) -> list[tuple[int, str]]:
 
 
 def extract(pdf_path: Path) -> list[Medicine]:
+    source, table_date = read_cover_metadata(pdf_path)
     current_header = ""
     current_active = ""
     pending: list[str] = []
@@ -210,6 +245,9 @@ def extract(pdf_path: Path) -> list[Medicine]:
 
         price_start = line.rfind(money[-8])
         presentation = normalize_spaces(line[:price_start])
+        if MONEY_RE.search(presentation):
+            pending = []
+            continue
         values = [parse_money(item) for item in money[-8:]]
         pmc = {
             "20": values[1],
@@ -231,8 +269,8 @@ def extract(pdf_path: Path) -> list[Medicine]:
                 presentation=presentation,
                 pmc=pmc,
                 sourcePage=page,
-                source="Suplemento Kairos 451",
-                tableDate="Junho/2026",
+                source=source,
+                tableDate=table_date,
             )
         )
         pending = []

@@ -37,6 +37,7 @@ export default async function AdminPage() {
   const report = validateCriticalMedicines(medicines);
   const tableDate = medicines[0]?.tableDate ?? "Não informada";
   const commercialized = medicines.filter((item) => item.commercialized).length;
+  const kairosOverlayCount = medicines.filter((item) => item.source.includes("Kairos 452")).length;
   const hasBlocker = report.invalid > 0;
   const absentItems = report.items.filter((item) => item.status === "absent");
   const invalidItems = report.items.filter((item) => item.status === "invalid");
@@ -63,8 +64,8 @@ export default async function AdminPage() {
         </div>
         <div className="admin-card">
           <FileCheck2 size={22} />
-          <span>Tabela</span>
-          <strong>{tableDate}</strong>
+          <span>Tabela + Kairos</span>
+          <strong>{kairosOverlayCount > 0 ? `${tableDate} + ${kairosOverlayCount} Kairos` : tableDate}</strong>
         </div>
         <div className="admin-card">
           <CheckCircle2 size={22} />
@@ -89,6 +90,7 @@ export default async function AdminPage() {
         <ol className="admin-steps">
           <li>Baixar a planilha XLS da lista de preços no portal da CMED/Anvisa.</li>
           <li>Rodar a importação oficial para atualizar `src/data/medicines.json`.</li>
+          <li>Quando necessário, aplicar apenas o overlay Kairos com pareamento seguro.</li>
           <li>Executar `npm run validate:critical` antes de carregar o Neon.</li>
           <li>Se passar sem bloqueios, rodar `npm run seed:neon` e publicar na Vercel.</li>
         </ol>

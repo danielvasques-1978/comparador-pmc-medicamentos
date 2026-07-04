@@ -194,6 +194,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
   const selectedRate = ufMap[uf] ?? defaultUfIcmsMap[uf];
   const selectedZone = selectedRate;
   const tableDate = medicines[0]?.tableDate ?? "Não informada";
+  const kairosOverlayCount = medicines.filter((item) => item.source.includes("Kairos 452")).length;
   const activeQuery = query.trim();
   const hasSearch = normalize(activeQuery).length >= 2;
   const hasPaidAccess = !billingEnabled || !billingRequired || planStatus === "active" || planStatus === "trialing";
@@ -525,6 +526,11 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
         <div>
           <p className="eyebrow">Tabela importada: {tableDate}</p>
           <h1>Comparador PMC Medicamentos</h1>
+          {kairosOverlayCount > 0 ? (
+            <p className="topbar-note">
+              Kairos 452 aplicado em {kairosOverlayCount.toLocaleString("pt-BR")} apresentações com pareamento seguro.
+            </p>
+          ) : null}
         </div>
         <div className="top-actions">
           <a className="ghost-button" href="/admin" title="Revisar base">
@@ -710,7 +716,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
           </div>
           <div className="source-pill">
             <ShieldCheck size={16} />
-            <span>{medicines[0]?.source ?? "Fonte importada"}</span>
+            <span>{kairosOverlayCount > 0 ? "CMED/Anvisa + Kairos 452 parcial" : medicines[0]?.source ?? "Fonte importada"}</span>
           </div>
         </div>
 
@@ -735,6 +741,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
                     <div className="medicine-title">
                       <h3>{item.name}</h3>
                       <span>{item.kind}</span>
+                      {item.source.includes("Kairos 452") ? <span>Kairos 452</span> : null}
                     </div>
                     <p>{item.activeIngredient}</p>
                     <small>{item.presentation}</small>
