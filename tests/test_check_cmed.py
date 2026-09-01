@@ -47,6 +47,24 @@ def test_trava_preco_acima_do_limite():
     assert "X" in failures[0].detail
 
 
+def test_trava_preco_com_queda_grande_tambem():
+    # A collapse in price is the more alarming direction for a parser bug
+    # (e.g. a column shifted and PMC 18% now reads a much smaller column),
+    # so it must trip the gate exactly like a spike, and the message must
+    # not call it an "aumento" when it is actually a drop.
+    report = base_report(
+        maxPriceVariation=0.40,
+        priceChanges=[{"id": "a", "name": "Queda Suspeita", "before": 100.0, "after": 60.0, "variation": -0.40}],
+    )
+
+    failures = run_checks(report, VAZIO, VAZIO)
+
+    assert [failure.name for failure in failures] == ["preco"]
+    detail = failures[0].detail
+    assert "Queda Suspeita" in detail
+    assert "aumento" not in detail.lower()
+
+
 def test_trava_ean_abaixo_da_cobertura():
     assert [f.name for f in run_checks(base_report(eanCoverage=0.40), VAZIO, VAZIO)] == ["ean"]
 

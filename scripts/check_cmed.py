@@ -94,8 +94,8 @@ def _check_price(report: dict) -> Failure | None:
     # Report count found in the sample and clarify it's among largest variations
     sample_text = "; ".join(offenders[:10])
     detail = (
-        f"Entre os maiores aumentos de preço, {len(offenders)} apresentação(ões) variaram acima de {MAX_PRICE_VARIATION:.0%}: "
-        + sample_text
+        f"Entre as maiores variações de preço, {len(offenders)} apresentação(ões) variaram acima de {MAX_PRICE_VARIATION:.0%} "
+        f"(para cima ou para baixo): " + sample_text
     )
     return Failure("preco", detail)
 
