@@ -1866,7 +1866,7 @@ jobs:
       - name: Rodar os testes
         run: |
           pytest -q
-          node --test tests/
+          node --test
 
       - name: Atualizar a base
         env:
