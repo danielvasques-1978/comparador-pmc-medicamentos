@@ -1,12 +1,13 @@
 import fs from "node:fs";
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import criticalMedicines from "../src/data/critical-medicines.json" with { type: "json" };
 
+const DEFAULT_INPUT = fileURLToPath(new URL("../src/data/medicines.json", import.meta.url));
+
 const args = process.argv.slice(2);
 const asJson = args.includes("--json");
-const inputPath = args.find((arg) => !arg.startsWith("--"))
-  ?? path.join(process.cwd(), "src", "data", "medicines.json");
+const inputPath = args.find((arg) => !arg.startsWith("--")) ?? DEFAULT_INPUT;
 
 const medicines = JSON.parse(fs.readFileSync(inputPath, "utf8"));
 

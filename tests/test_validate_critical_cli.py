@@ -50,3 +50,19 @@ def test_lista_criticos_ausentes(tmp_path):
 
     assert "Clonazepam" in report["absent"]
     assert report["ok"] == 0
+
+
+def test_default_path_independe_do_cwd(tmp_path):
+    script = ROOT / "scripts" / "validate_critical_medicines.mjs"
+
+    result = subprocess.run(
+        ["node", str(script), "--json"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["ok"] > 0
