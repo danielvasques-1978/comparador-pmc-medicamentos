@@ -22,6 +22,13 @@ export type Medicine = {
   ggremCode?: string;
   registration?: string;
   commercialized?: boolean;
+  ean1?: string;
+  ean2?: string;
+  ean3?: string;
+  therapeuticClass?: string;
+  tarja?: string;
+  hospitalRestricted?: boolean;
+  delistedAt?: string;
   sourcePage: number;
   source: string;
   tableDate: string;

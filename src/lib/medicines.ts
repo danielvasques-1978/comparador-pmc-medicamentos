@@ -14,6 +14,12 @@ type MedicineRow = {
   ggrem_code: string | null;
   registration: string | null;
   commercialized: boolean | null;
+  ean1: string | null;
+  ean2: string | null;
+  ean3: string | null;
+  therapeutic_class: string | null;
+  tarja: string | null;
+  hospital_restricted: boolean | null;
   source_page: number;
   source: string;
   table_date: string;
@@ -37,10 +43,17 @@ export async function getMedicines() {
         ggrem_code,
         registration,
         commercialized,
+        ean1,
+        ean2,
+        ean3,
+        therapeutic_class,
+        tarja,
+        hospital_restricted,
         source_page,
         source,
         table_date
       from medicines
+      where delisted_at is null
       order by laboratory, name, presentation
     `;
 
@@ -58,6 +71,12 @@ export async function getMedicines() {
       ggremCode: row.ggrem_code ?? row.id,
       registration: row.registration ?? undefined,
       commercialized: row.commercialized ?? undefined,
+      ean1: row.ean1 ?? undefined,
+      ean2: row.ean2 ?? undefined,
+      ean3: row.ean3 ?? undefined,
+      therapeuticClass: row.therapeutic_class ?? undefined,
+      tarja: row.tarja ?? undefined,
+      hospitalRestricted: row.hospital_restricted ?? undefined,
       sourcePage: row.source_page,
       source: row.source,
       tableDate: row.table_date,
