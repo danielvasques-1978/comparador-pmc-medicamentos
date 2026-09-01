@@ -37,6 +37,45 @@ def parse_price(value: object) -> float | None:
         return None
 
 
+COMMERCIALIZATION_PATTERN = re.compile(r"^COMERCIALIZAÇÃO\s+\d{4}$")
+
+
+def clean_code(value: object) -> str:
+    """Códigos numéricos longos não podem virar notação científica."""
+    if isinstance(value, bool):
+        return ""
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    if isinstance(value, int):
+        return str(value)
+    return clean(value)
+
+
+def find_commercialization_column(columns: dict[str, int]) -> str:
+    matches = [header for header in columns if COMMERCIALIZATION_PATTERN.match(header)]
+    if not matches:
+        raise ValueError("Coluna COMERCIALIZAÇÃO <ano> não encontrada na planilha CMED.")
+    return sorted(matches)[-1]
+
+
+def optional_text(row: tuple, columns: dict[str, int], column: str) -> str | None:
+    if column not in columns:
+        return None
+    return clean(row[columns[column]]) or None
+
+
+def optional_digits(row: tuple, columns: dict[str, int], column: str) -> str | None:
+    if column not in columns:
+        return None
+    return clean_code(row[columns[column]]) or None
+
+
+def flag(row: tuple, columns: dict[str, int], column: str) -> bool:
+    if column not in columns:
+        return False
+    return clean(row[columns[column]]).casefold() == "sim"
+
+
 def find_header_row(sheet) -> int:
     for row_number, row in enumerate(sheet.iter_rows(values_only=True), 1):
         if clean(row[0]).upper() == "SUBSTÂNCIA":
@@ -61,6 +100,8 @@ def import_cmed(input_path: Path) -> list[dict[str, object]]:
     headers = [clean(value) for value in next(sheet.iter_rows(min_row=header_row, max_row=header_row, values_only=True))]
     columns = {header: index for index, header in enumerate(headers)}
 
+    commercialization_column = find_commercialization_column(columns)
+
     required = [
         "SUBSTÂNCIA",
         "LABORATÓRIO",
@@ -69,7 +110,6 @@ def import_cmed(input_path: Path) -> list[dict[str, object]]:
         "PRODUTO",
         "APRESENTAÇÃO",
         "TIPO DE PRODUTO (STATUS DO PRODUTO)",
-        "COMERCIALIZAÇÃO 2025",
         *PMC_COLUMNS.values(),
     ]
     missing = [column for column in required if column not in columns]
@@ -82,7 +122,7 @@ def import_cmed(input_path: Path) -> list[dict[str, object]]:
         if not any(price is not None for price in prices.values()):
             continue
 
-        ggrem_code = clean(row[columns["CÓDIGO GGREM"]])
+        ggrem_code = clean_code(row[columns["CÓDIGO GGREM"]])
         product_type = clean(row[columns["TIPO DE PRODUTO (STATUS DO PRODUTO)"]]) or "Não informado"
         medicines.append(
             {
@@ -96,7 +136,13 @@ def import_cmed(input_path: Path) -> list[dict[str, object]]:
                 "pmc": prices,
                 "ggremCode": ggrem_code,
                 "registration": clean(row[columns["REGISTRO"]]),
-                "commercialized": clean(row[columns["COMERCIALIZAÇÃO 2025"]]).casefold() == "sim",
+                "ean1": optional_digits(row, columns, "EAN 1"),
+                "ean2": optional_digits(row, columns, "EAN 2"),
+                "ean3": optional_digits(row, columns, "EAN 3"),
+                "therapeuticClass": optional_text(row, columns, "CLASSE TERAPÊUTICA"),
+                "tarja": optional_text(row, columns, "TARJA"),
+                "hospitalRestricted": flag(row, columns, "RESTRIÇÃO HOSPITALAR"),
+                "commercialized": flag(row, columns, commercialization_column),
                 "sourcePage": 0,
                 "source": "CMED/Anvisa",
                 "tableDate": table_date,
@@ -122,7 +168,7 @@ def main() -> None:
         encoding="utf-8",
     )
     commercialized = sum(bool(item["commercialized"]) for item in medicines)
-    print(f"Importadas {len(medicines)} apresentações com PMC; {commercialized} comercializadas em 2025.")
+    print(f"Importadas {len(medicines)} apresentações com PMC; {commercialized} comercializadas.")
 
 
 if __name__ == "__main__":

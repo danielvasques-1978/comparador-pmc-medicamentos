@@ -54,3 +54,90 @@ def test_preco_com_asterisco_de_isencao(build_cmed_workbook):
     ])
 
     assert import_cmed(path)[0]["pmc"]["18"] == 12.34
+
+
+def test_captura_ean_e_campos_novos(build_cmed_workbook):
+    path = build_cmed_workbook([
+        {
+            "SUBSTÂNCIA": "CLONAZEPAM",
+            "LABORATÓRIO": "ACME S.A.",
+            "CÓDIGO GGREM": "538912020009303",
+            "EAN 1": "7898636192182",
+            "PRODUTO": "RIVOTRIL",
+            "APRESENTAÇÃO": "2 MG",
+            "CLASSE TERAPÊUTICA": "N3AE - ANTIEPILEPTICOS",
+            "TARJA": "Tarja Preta",
+            "RESTRIÇÃO HOSPITALAR": "Não",
+            "PMC 18 %": "50,28",
+            "COMERCIALIZAÇÃO 2025": "Sim",
+        }
+    ])
+
+    item = import_cmed(path)[0]
+
+    assert item["ean1"] == "7898636192182"
+    assert item["ean2"] is None
+    assert item["ean3"] is None
+    assert item["therapeuticClass"] == "N3AE - ANTIEPILEPTICOS"
+    assert item["tarja"] == "Tarja Preta"
+    assert item["hospitalRestricted"] is False
+
+
+def test_ean_numerico_nao_vira_notacao_cientifica(build_cmed_workbook):
+    path = build_cmed_workbook([
+        {
+            "SUBSTÂNCIA": "CLONAZEPAM",
+            "LABORATÓRIO": "ACME S.A.",
+            "CÓDIGO GGREM": 538912020009303,
+            "EAN 1": 7898636192182,
+            "PRODUTO": "RIVOTRIL",
+            "APRESENTAÇÃO": "2 MG",
+            "PMC 18 %": "50,28",
+            "COMERCIALIZAÇÃO 2025": "Sim",
+        }
+    ])
+
+    item = import_cmed(path)[0]
+
+    assert item["ean1"] == "7898636192182"
+    assert item["id"] == "538912020009303"
+
+
+def test_coluna_de_comercializacao_de_outro_ano(build_cmed_workbook):
+    path = build_cmed_workbook(
+        [
+            {
+                "SUBSTÂNCIA": "CLONAZEPAM",
+                "LABORATÓRIO": "ACME S.A.",
+                "CÓDIGO GGREM": "333",
+                "PRODUTO": "RIVOTRIL",
+                "APRESENTAÇÃO": "2 MG",
+                "PMC 18 %": "50,28",
+                "COMERCIALIZAÇÃO 2026": "Sim",
+            }
+        ],
+        commercialization_header="COMERCIALIZAÇÃO 2026",
+    )
+
+    assert import_cmed(path)[0]["commercialized"] is True
+
+
+def test_planilha_sem_coluna_de_comercializacao_falha(build_cmed_workbook):
+    import pytest
+
+    path = build_cmed_workbook(
+        [
+            {
+                "SUBSTÂNCIA": "CLONAZEPAM",
+                "LABORATÓRIO": "ACME S.A.",
+                "CÓDIGO GGREM": "444",
+                "PRODUTO": "RIVOTRIL",
+                "APRESENTAÇÃO": "2 MG",
+                "PMC 18 %": "50,28",
+            }
+        ],
+        commercialization_header="OUTRA COISA",
+    )
+
+    with pytest.raises(ValueError, match="COMERCIALIZAÇÃO"):
+        import_cmed(path)
