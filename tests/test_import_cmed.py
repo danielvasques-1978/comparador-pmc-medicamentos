@@ -141,3 +141,30 @@ def test_planilha_sem_coluna_de_comercializacao_falha(build_cmed_workbook):
 
     with pytest.raises(ValueError, match="COMERCIALIZAÇÃO"):
         import_cmed(path)
+
+
+def test_traco_da_cmed_vira_ausencia(build_cmed_workbook):
+    path = build_cmed_workbook([
+        {
+            "SUBSTÂNCIA": "CLONAZEPAM",
+            "LABORATÓRIO": "ACME S.A.",
+            "CÓDIGO GGREM": "555",
+            "EAN 1": "7898636192182",
+            "EAN 2": "-",
+            "EAN 3": "-",
+            "PRODUTO": "RIVOTRIL",
+            "APRESENTAÇÃO": "2 MG",
+            "CLASSE TERAPÊUTICA": "-",
+            "TARJA": "-",
+            "PMC 18 %": "50,28",
+            "COMERCIALIZAÇÃO 2025": "Sim",
+        }
+    ])
+
+    item = import_cmed(path)[0]
+
+    assert item["ean1"] == "7898636192182"
+    assert item["ean2"] is None
+    assert item["ean3"] is None
+    assert item["therapeuticClass"] is None
+    assert item["tarja"] is None

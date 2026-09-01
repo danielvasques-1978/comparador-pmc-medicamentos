@@ -24,8 +24,18 @@ def clean(value: object) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
+# The CMED spreadsheet uses a literal "-" as its "no value" placeholder in
+# addition to genuinely empty cells; every place that reads an optional cell
+# should treat both the same way.
+EMPTY_MARKERS = {"", "-"}
+
+
+def is_empty(text: str) -> bool:
+    return text in EMPTY_MARKERS
+
+
 def parse_price(value: object) -> float | None:
-    if value is None or clean(value) in {"", "-"}:
+    if value is None or is_empty(clean(value)):
         return None
     if isinstance(value, (int, float)):
         return round(float(value), 2)
@@ -61,19 +71,22 @@ def find_commercialization_column(columns: dict[str, int]) -> str:
 def optional_text(row: tuple, columns: dict[str, int], column: str) -> str | None:
     if column not in columns:
         return None
-    return clean(row[columns[column]]) or None
+    text = clean(row[columns[column]])
+    return None if is_empty(text) else text
 
 
 def optional_digits(row: tuple, columns: dict[str, int], column: str) -> str | None:
     if column not in columns:
         return None
-    return clean_code(row[columns[column]]) or None
+    digits = clean_code(row[columns[column]])
+    return None if is_empty(digits) else digits
 
 
 def flag(row: tuple, columns: dict[str, int], column: str) -> bool:
     if column not in columns:
         return False
-    return clean(row[columns[column]]).casefold() == "sim"
+    text = clean(row[columns[column]])
+    return not is_empty(text) and text.casefold() == "sim"
 
 
 def find_header_row(sheet) -> int:
