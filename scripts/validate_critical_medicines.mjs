@@ -1,5 +1,14 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import criticalMedicines from "../src/data/critical-medicines.json" with { type: "json" };
-import rawMedicines from "../src/data/medicines.json" with { type: "json" };
+
+const args = process.argv.slice(2);
+const asJson = args.includes("--json");
+const inputPath = args.find((arg) => !arg.startsWith("--"))
+  ?? path.join(process.cwd(), "src", "data", "medicines.json");
+
+const medicines = JSON.parse(fs.readFileSync(inputPath, "utf8"));
 
 function normalize(value) {
   return value
@@ -7,8 +16,6 @@ function normalize(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
-
-const medicines = rawMedicines;
 
 function textTokens(value) {
   return normalize(value)
@@ -124,6 +131,12 @@ for (const item of criticalMedicines) {
 }
 
 const okCount = summary.filter((item) => item.status === "ok").length;
+
+if (asJson) {
+  console.log(JSON.stringify({ ok: okCount, absent, invalid: failures }));
+  process.exit(0);
+}
+
 console.log(`Critical medicine validation: ${okCount} OK, ${absent.length} absent, ${failures.length} failing.`);
 
 if (absent.length > 0) {
