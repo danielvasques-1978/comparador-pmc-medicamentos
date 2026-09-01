@@ -128,3 +128,21 @@ def test_price_message_clarifies_sample_when_truncated():
     # or should explicitly state it's the count within the provided data sample
     # NOT just claim "70 variações" without clarification that data is pre-filtered
     assert "maiores" in detail.lower() or "amostra" in detail.lower() or "entre os" in detail.lower()
+
+
+def test_volume_shrink_handles_missing_record_keys_defensively():
+    # Malformed records missing name or presentation keys should not crash run_checks
+    left = [
+        {"id": "1", "name": "Dipirona 500mg", "presentation": "Comprimido"},
+        {"id": "2", "presentation": "Cápsula"},  # Missing "name" key
+        {"id": "3", "name": "Metformina 850mg"},  # Missing "presentation" key
+    ]
+    report = base_report(volumeRatio=-0.20, left=left)
+
+    # Should return volume Failure normally without raising KeyError
+    failures = run_checks(report, VAZIO, VAZIO)
+
+    assert [f.name for f in failures] == ["volume"]
+    # Detail should still contain at least the properly formed record name
+    detail = failures[0].detail
+    assert "Dipirona 500mg" in detail or "3 saíram" in detail  # Either shows good record or shows count

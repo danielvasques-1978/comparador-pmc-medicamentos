@@ -55,13 +55,17 @@ def _check_volume(report: dict) -> Failure | None:
         records_list = report.get("entered", [])
         action_word = "entraram"
 
-    # Sample records and format them
+    # Sample records and format them defensively
     sample_size = min(10, len(records_list))
     sample = records_list[:sample_size]
-    sample_text = "; ".join(
-        f"{record['name']} ({record['presentation']})"
-        for record in sample
-    )
+    sample_parts = []
+    for record in sample:
+        # Defensive reading: skip records missing required keys
+        name = record.get("name", "")
+        presentation = record.get("presentation", "")
+        if name or presentation:
+            sample_parts.append(f"{name} ({presentation})" if name and presentation else (name or presentation))
+    sample_text = "; ".join(sample_parts)
 
     total_count = len(records_list)
     detail = (
