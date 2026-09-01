@@ -10,7 +10,8 @@
     "import:cmed": "python scripts/import_cmed_xlsx.py",
     "migrate:neon": "node scripts/migrate_neon.mjs",
     "seed:neon": "node scripts/seed_neon_medicines.mjs",
-    "validate:critical": "node scripts/validate_critical_medicines.mjs"
+    "validate:critical": "node scripts/validate_critical_medicines.mjs",
+    "update:cmed": "python -m scripts.update_cmed"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
