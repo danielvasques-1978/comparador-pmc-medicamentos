@@ -165,6 +165,26 @@ def test_libera_o_handle_do_arquivo_apos_importar(build_cmed_workbook):
     path.rename(path.with_name("renomeado.xlsx"))
 
 
+def test_traco_no_tipo_de_produto_vira_nao_informado(build_cmed_workbook):
+    path = build_cmed_workbook([
+        {
+            "SUBSTÂNCIA": "CLONAZEPAM",
+            "LABORATÓRIO": "ACME S.A.",
+            "CÓDIGO GGREM": "777",
+            "PRODUTO": "RIVOTRIL",
+            "APRESENTAÇÃO": "2 MG",
+            "TIPO DE PRODUTO (STATUS DO PRODUTO)": "-",
+            "PMC 18 %": "50,28",
+            "COMERCIALIZAÇÃO 2025": "Sim",
+        }
+    ])
+
+    item = import_cmed(path)[0]
+
+    assert item["kind"] == "Não informado"
+    assert item["productType"] == "Não informado"
+
+
 def test_traco_da_cmed_vira_ausencia(build_cmed_workbook):
     path = build_cmed_workbook([
         {

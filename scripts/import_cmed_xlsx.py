@@ -141,7 +141,8 @@ def import_cmed(input_path: Path) -> list[dict[str, object]]:
                 continue
 
             ggrem_code = clean_code(row[columns["CÓDIGO GGREM"]])
-            product_type = clean(row[columns["TIPO DE PRODUTO (STATUS DO PRODUTO)"]]) or "Não informado"
+            raw_product_type = clean(row[columns["TIPO DE PRODUTO (STATUS DO PRODUTO)"]])
+            product_type = "Não informado" if is_empty(raw_product_type) else raw_product_type
             medicines.append(
                 {
                     "id": ggrem_code,
