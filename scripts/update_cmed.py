@@ -104,7 +104,23 @@ def main() -> int:
                 # still has the old edition — the two sources of truth would
                 # disagree. Restore the previous contents so the tree matches
                 # what is actually in the database, and let the caller retry.
-                CURRENT_JSON.write_text(current_json_text, encoding="utf-8")
+                try:
+                    CURRENT_JSON.write_text(current_json_text, encoding="utf-8")
+                except OSError as restore_error:
+                    # The restore itself can fail too (file locked, disk
+                    # full). That is strictly worse than the seed failure
+                    # alone: medicines.json may now disagree with Neon and
+                    # nobody rolled it back. Say so explicitly instead of
+                    # letting this exception bubble up as a generic
+                    # traceback that hides the real, more important fact.
+                    print(
+                        f"Edição {report['candidateTableDate']} NÃO foi revertida: a "
+                        "atualização do banco Neon falhou E a restauração de "
+                        f"{CURRENT_JSON} também falhou ({restore_error}). Verifique "
+                        "manualmente esse arquivo antes de rodar novamente.",
+                        file=sys.stderr,
+                    )
+                    return 1
                 print(
                     f"Edição {report['candidateTableDate']} revertida: a atualização do "
                     "banco Neon falhou, então medicines.json foi restaurado para a edição "
