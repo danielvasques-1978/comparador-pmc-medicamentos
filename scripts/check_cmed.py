@@ -46,12 +46,37 @@ def _check_volume(report: dict) -> Failure | None:
     ratio = report["volumeRatio"]
     if VOLUME_MIN_RATIO <= ratio <= VOLUME_MAX_RATIO:
         return None
-    return Failure(
-        "volume",
+
+    # Determine which records list to sample from
+    if ratio < VOLUME_MIN_RATIO:
+        records_list = report.get("left", [])
+        action_word = "saíram"
+    else:
+        records_list = report.get("entered", [])
+        action_word = "entraram"
+
+    # Sample records and format them
+    sample_size = min(10, len(records_list))
+    sample = records_list[:sample_size]
+    sample_text = "; ".join(
+        f"{record['name']} ({record['presentation']})"
+        for record in sample
+    )
+
+    total_count = len(records_list)
+    detail = (
         f"Total de apresentações variou {ratio:.1%} "
         f"({report['currentCount']} para {report['candidateCount']}), fora da faixa "
-        f"de {VOLUME_MIN_RATIO:.0%} a {VOLUME_MAX_RATIO:.0%}.",
+        f"de {VOLUME_MIN_RATIO:.0%} a {VOLUME_MAX_RATIO:.0%}. "
+        f"{total_count} {action_word}"
     )
+
+    if sample_text:
+        detail += f", entre elas: {sample_text}"
+
+    detail += "."
+
+    return Failure("volume", detail)
 
 
 def _check_price(report: dict) -> Failure | None:
@@ -62,11 +87,13 @@ def _check_price(report: dict) -> Failure | None:
         for item in report["priceChanges"]
         if abs(item["variation"]) > MAX_PRICE_VARIATION
     ]
-    return Failure(
-        "preco",
-        f"{len(offenders)} apresentação(ões) variaram acima de {MAX_PRICE_VARIATION:.0%}: "
-        + "; ".join(offenders[:10]),
+    # Report count found in the sample and clarify it's among largest variations
+    sample_text = "; ".join(offenders[:10])
+    detail = (
+        f"Entre os maiores aumentos de preço, {len(offenders)} apresentação(ões) variaram acima de {MAX_PRICE_VARIATION:.0%}: "
+        + sample_text
     )
+    return Failure("preco", detail)
 
 
 def _check_ean(report: dict) -> Failure | None:
