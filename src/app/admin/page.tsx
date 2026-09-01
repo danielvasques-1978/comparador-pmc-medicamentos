@@ -34,10 +34,30 @@ export default async function AdminPage() {
   }
 
   const medicines = await getMedicines();
+
+  const [lastApplied] = sql
+    ? await sql`
+        select table_date, imported_at, row_count
+          from price_imports
+         where status = 'applied'
+         order by imported_at desc
+         limit 1
+      `
+    : [];
+
+  const [lastBlocked] = sql
+    ? await sql`
+        select table_date, imported_at, report, source_url
+          from price_imports
+         where status = 'blocked'
+         order by imported_at desc
+         limit 1
+      `
+    : [];
+
   const report = validateCriticalMedicines(medicines);
   const tableDate = medicines[0]?.tableDate ?? "Não informada";
   const commercialized = medicines.filter((item) => item.commercialized).length;
-  const kairosOverlayCount = medicines.filter((item) => item.source.includes("Kairos 452")).length;
   const hasBlocker = report.invalid > 0;
   const absentItems = report.items.filter((item) => item.status === "absent");
   const invalidItems = report.items.filter((item) => item.status === "invalid");
@@ -62,10 +82,10 @@ export default async function AdminPage() {
           <span>Apresentações</span>
           <strong>{medicines.length.toLocaleString("pt-BR")}</strong>
         </div>
-        <div className="admin-card">
+        <div className={lastBlocked ? "admin-card danger" : "admin-card"}>
           <FileCheck2 size={22} />
-          <span>Tabela + Kairos</span>
-          <strong>{kairosOverlayCount > 0 ? `${tableDate} + ${kairosOverlayCount} Kairos` : tableDate}</strong>
+          <span>{lastBlocked ? "Edição bloqueada" : "Tabela vigente"}</span>
+          <strong>{lastBlocked ? String(lastBlocked.table_date) : tableDate}</strong>
         </div>
         <div className="admin-card">
           <CheckCircle2 size={22} />
@@ -82,18 +102,37 @@ export default async function AdminPage() {
       <section className="admin-panel">
         <div className="admin-panel-title">
           <div>
-            <p className="eyebrow">Importação mensal</p>
-            <h2>Fluxo recomendado</h2>
+            <p className="eyebrow">Atualização automática</p>
+            <h2>{lastBlocked ? "Edição bloqueada por uma trava" : "Em dia"}</h2>
           </div>
           <UploadCloud size={22} />
         </div>
-        <ol className="admin-steps">
-          <li>Baixar a planilha XLS da lista de preços no portal da CMED/Anvisa.</li>
-          <li>Rodar a importação oficial para atualizar `src/data/medicines.json`.</li>
-          <li>Quando necessário, aplicar apenas o overlay Kairos com pareamento seguro.</li>
-          <li>Executar `npm run validate:critical` antes de carregar o Neon.</li>
-          <li>Se passar sem bloqueios, rodar `npm run seed:neon` e publicar na Vercel.</li>
-        </ol>
+
+        {lastApplied ? (
+          <div className="admin-status-row">
+            <span>Última edição aplicada: {String(lastApplied.table_date)}</span>
+            <span>{Number(lastApplied.row_count).toLocaleString("pt-BR")} apresentações</span>
+          </div>
+        ) : (
+          <p className="admin-copy">Nenhuma edição registrada ainda pela automação.</p>
+        )}
+
+        {lastBlocked ? (
+          <div className="admin-list">
+            {((lastBlocked.report as { failures?: Array<{ name: string; detail: string }> })?.failures ?? []).map(
+              (failure) => (
+                <article className="admin-issue" key={failure.name}>
+                  <strong>{failure.name}</strong>
+                  <p>{failure.detail}</p>
+                </article>
+              ),
+            )}
+            <p className="admin-copy">
+              Para destravar, ajuste o limite correspondente em `scripts/cmed_limits.py` e rode a
+              automação de novo. Não há publicação forçada, por decisão de projeto.
+            </p>
+          </div>
+        ) : null}
       </section>
 
       <section className="admin-panel">
