@@ -55,6 +55,14 @@ export default async function AdminPage() {
       `
     : [];
 
+  const rawFailures = (lastBlocked?.report as { failures?: unknown })?.failures;
+  const blockedFailures = Array.isArray(rawFailures)
+    ? rawFailures.filter(
+        (failure): failure is { name?: string; detail?: string } =>
+          typeof failure === "object" && failure !== null,
+      )
+    : [];
+
   const report = validateCriticalMedicines(medicines);
   const tableDate = medicines[0]?.tableDate ?? "Não informada";
   const commercialized = medicines.filter((item) => item.commercialized).length;
@@ -119,14 +127,12 @@ export default async function AdminPage() {
 
         {lastBlocked ? (
           <div className="admin-list">
-            {((lastBlocked.report as { failures?: Array<{ name: string; detail: string }> })?.failures ?? []).map(
-              (failure) => (
-                <article className="admin-issue" key={failure.name}>
-                  <strong>{failure.name}</strong>
-                  <p>{failure.detail}</p>
-                </article>
-              ),
-            )}
+            {blockedFailures.map((failure, index) => (
+              <article className="admin-issue" key={`${failure.name ?? "falha"}-${index}`}>
+                <strong>{failure.name ?? ""}</strong>
+                <p>{failure.detail ?? ""}</p>
+              </article>
+            ))}
             <p className="admin-copy">
               Para destravar, ajuste o limite correspondente em `scripts/cmed_limits.py` e rode a
               automação de novo. Não há publicação forçada, por decisão de projeto.
