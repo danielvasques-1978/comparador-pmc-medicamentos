@@ -106,66 +106,73 @@ def extract_table_date(sheet) -> str:
 
 
 def import_cmed(input_path: Path) -> list[dict[str, object]]:
+    # read_only workbooks memory-map the .xlsx; openpyxl only releases that
+    # handle on an explicit close(), so this must run even if a malformed
+    # spreadsheet raises partway through the body below (e.g. missing
+    # columns) — otherwise the caller is left holding a locked file.
     workbook = load_workbook(input_path, read_only=True, data_only=True)
-    sheet = workbook.active
-    header_row = find_header_row(sheet)
-    table_date = extract_table_date(sheet)
-    headers = [clean(value) for value in next(sheet.iter_rows(min_row=header_row, max_row=header_row, values_only=True))]
-    columns = {header: index for index, header in enumerate(headers)}
+    try:
+        sheet = workbook.active
+        header_row = find_header_row(sheet)
+        table_date = extract_table_date(sheet)
+        headers = [clean(value) for value in next(sheet.iter_rows(min_row=header_row, max_row=header_row, values_only=True))]
+        columns = {header: index for index, header in enumerate(headers)}
 
-    commercialization_column = find_commercialization_column(columns)
+        commercialization_column = find_commercialization_column(columns)
 
-    required = [
-        "SUBSTÂNCIA",
-        "LABORATÓRIO",
-        "CÓDIGO GGREM",
-        "REGISTRO",
-        "PRODUTO",
-        "APRESENTAÇÃO",
-        "TIPO DE PRODUTO (STATUS DO PRODUTO)",
-        *PMC_COLUMNS.values(),
-    ]
-    missing = [column for column in required if column not in columns]
-    if missing:
-        raise ValueError(f"Colunas obrigatórias ausentes: {', '.join(missing)}")
+        required = [
+            "SUBSTÂNCIA",
+            "LABORATÓRIO",
+            "CÓDIGO GGREM",
+            "REGISTRO",
+            "PRODUTO",
+            "APRESENTAÇÃO",
+            "TIPO DE PRODUTO (STATUS DO PRODUTO)",
+            *PMC_COLUMNS.values(),
+        ]
+        missing = [column for column in required if column not in columns]
+        if missing:
+            raise ValueError(f"Colunas obrigatórias ausentes: {', '.join(missing)}")
 
-    medicines: list[dict[str, object]] = []
-    for row in sheet.iter_rows(min_row=header_row + 1, values_only=True):
-        prices = {rate: parse_price(row[columns[column]]) for rate, column in PMC_COLUMNS.items()}
-        if not any(price is not None for price in prices.values()):
-            continue
+        medicines: list[dict[str, object]] = []
+        for row in sheet.iter_rows(min_row=header_row + 1, values_only=True):
+            prices = {rate: parse_price(row[columns[column]]) for rate, column in PMC_COLUMNS.items()}
+            if not any(price is not None for price in prices.values()):
+                continue
 
-        ggrem_code = clean_code(row[columns["CÓDIGO GGREM"]])
-        product_type = clean(row[columns["TIPO DE PRODUTO (STATUS DO PRODUTO)"]]) or "Não informado"
-        medicines.append(
-            {
-                "id": ggrem_code,
-                "name": clean(row[columns["PRODUTO"]]),
-                "activeIngredient": clean(row[columns["SUBSTÂNCIA"]]),
-                "laboratory": clean(row[columns["LABORATÓRIO"]]),
-                "kind": product_type,
-                "productType": product_type,
-                "presentation": clean(row[columns["APRESENTAÇÃO"]]),
-                "pmc": prices,
-                "ggremCode": ggrem_code,
-                "registration": clean(row[columns["REGISTRO"]]),
-                "ean1": optional_digits(row, columns, "EAN 1"),
-                "ean2": optional_digits(row, columns, "EAN 2"),
-                "ean3": optional_digits(row, columns, "EAN 3"),
-                "therapeuticClass": optional_text(row, columns, "CLASSE TERAPÊUTICA"),
-                "tarja": optional_text(row, columns, "TARJA"),
-                "hospitalRestricted": flag(row, columns, "RESTRIÇÃO HOSPITALAR"),
-                "commercialized": flag(row, columns, commercialization_column),
-                "sourcePage": 0,
-                "source": "CMED/Anvisa",
-                "tableDate": table_date,
-            }
-        )
+            ggrem_code = clean_code(row[columns["CÓDIGO GGREM"]])
+            product_type = clean(row[columns["TIPO DE PRODUTO (STATUS DO PRODUTO)"]]) or "Não informado"
+            medicines.append(
+                {
+                    "id": ggrem_code,
+                    "name": clean(row[columns["PRODUTO"]]),
+                    "activeIngredient": clean(row[columns["SUBSTÂNCIA"]]),
+                    "laboratory": clean(row[columns["LABORATÓRIO"]]),
+                    "kind": product_type,
+                    "productType": product_type,
+                    "presentation": clean(row[columns["APRESENTAÇÃO"]]),
+                    "pmc": prices,
+                    "ggremCode": ggrem_code,
+                    "registration": clean(row[columns["REGISTRO"]]),
+                    "ean1": optional_digits(row, columns, "EAN 1"),
+                    "ean2": optional_digits(row, columns, "EAN 2"),
+                    "ean3": optional_digits(row, columns, "EAN 3"),
+                    "therapeuticClass": optional_text(row, columns, "CLASSE TERAPÊUTICA"),
+                    "tarja": optional_text(row, columns, "TARJA"),
+                    "hospitalRestricted": flag(row, columns, "RESTRIÇÃO HOSPITALAR"),
+                    "commercialized": flag(row, columns, commercialization_column),
+                    "sourcePage": 0,
+                    "source": "CMED/Anvisa",
+                    "tableDate": table_date,
+                }
+            )
 
-    ids = [medicine["id"] for medicine in medicines]
-    if len(ids) != len(set(ids)):
-        raise ValueError("A planilha contém códigos GGREM duplicados entre as apresentações com PMC.")
-    return medicines
+        ids = [medicine["id"] for medicine in medicines]
+        if len(ids) != len(set(ids)):
+            raise ValueError("A planilha contém códigos GGREM duplicados entre as apresentações com PMC.")
+        return medicines
+    finally:
+        workbook.close()
 
 
 def main() -> None:

@@ -51,15 +51,11 @@ def main() -> int:
     parser.add_argument("--force", action="store_true", help="processa mesmo sem edição nova")
     args = parser.parse_args()
 
-    current = json.loads(CURRENT_JSON.read_text(encoding="utf-8"))
+    current_json_text = CURRENT_JSON.read_text(encoding="utf-8")
+    current = json.loads(current_json_text)
     current_table_date = current[0].get("tableDate", "") if current else ""
 
-    # ignore_cleanup_errors: on Windows, openpyxl's read_only workbook (used by
-    # import_cmed) keeps a memory-mapped handle on the downloaded .xlsx that is
-    # not always released by the time this context manager tears down the
-    # directory. Without this flag, that leftover lock turns a clean gate
-    # verdict (exit 0/1) into an unhandled PermissionError during cleanup.
-    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as workdir:
+    with tempfile.TemporaryDirectory() as workdir:
         work = Path(workdir)
 
         if args.xlsx:
@@ -99,7 +95,23 @@ def main() -> int:
         )
 
         if not args.skip_neon:
-            subprocess.run(["node", "scripts/seed_neon_medicines.mjs"], cwd=ROOT, check=True)
+            try:
+                subprocess.run(["node", "scripts/seed_neon_medicines.mjs"], cwd=ROOT, check=True)
+            except subprocess.CalledProcessError:
+                # The JSON write above must happen before seeding (the seed
+                # script reads that file), but that means a failed seed would
+                # otherwise leave medicines.json already replaced while Neon
+                # still has the old edition — the two sources of truth would
+                # disagree. Restore the previous contents so the tree matches
+                # what is actually in the database, and let the caller retry.
+                CURRENT_JSON.write_text(current_json_text, encoding="utf-8")
+                print(
+                    f"Edição {report['candidateTableDate']} revertida: a atualização do "
+                    "banco Neon falhou, então medicines.json foi restaurado para a edição "
+                    f"anterior ({current_table_date or 'nenhuma'}).",
+                    file=sys.stderr,
+                )
+                return 1
 
     return 0
 

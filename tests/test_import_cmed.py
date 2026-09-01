@@ -143,6 +143,28 @@ def test_planilha_sem_coluna_de_comercializacao_falha(build_cmed_workbook):
         import_cmed(path)
 
 
+def test_libera_o_handle_do_arquivo_apos_importar(build_cmed_workbook):
+    path = build_cmed_workbook([
+        {
+            "SUBSTÂNCIA": "CLONAZEPAM",
+            "LABORATÓRIO": "ACME S.A.",
+            "CÓDIGO GGREM": "666",
+            "PRODUTO": "RIVOTRIL",
+            "APRESENTAÇÃO": "2 MG",
+            "PMC 18 %": "50,28",
+            "COMERCIALIZAÇÃO 2025": "Sim",
+        }
+    ])
+
+    import_cmed(path)
+
+    # No Windows, um workbook read_only do openpyxl que não foi fechado
+    # mantém um handle aberto sobre o arquivo, e renomear/apagar o arquivo
+    # levanta PermissionError enquanto esse handle existe. Este rename só
+    # sucede se import_cmed tiver liberado o arquivo corretamente.
+    path.rename(path.with_name("renomeado.xlsx"))
+
+
 def test_traco_da_cmed_vira_ausencia(build_cmed_workbook):
     path = build_cmed_workbook([
         {
