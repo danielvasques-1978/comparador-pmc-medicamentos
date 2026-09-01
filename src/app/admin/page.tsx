@@ -55,6 +55,29 @@ export default async function AdminPage() {
       `
     : [];
 
+  const [lastPartial] = sql
+    ? await sql`
+        select table_date, imported_at, report
+          from price_imports
+         where status = 'partial'
+         order by imported_at desc
+         limit 1
+      `
+    : [];
+
+  // A blocked (or partial) row only describes the current state of the base
+  // while it is newer than the last edition actually applied. Once the
+  // blockage is resolved and a later edition is applied, the row stays in
+  // the table forever with status = 'blocked'/'partial' — without this
+  // comparison the screen would keep announcing a rejected or mixed edition
+  // as if it still described the live base.
+  const blockedIsCurrent = Boolean(
+    lastBlocked && (!lastApplied || new Date(lastBlocked.imported_at) > new Date(lastApplied.imported_at)),
+  );
+  const partialIsCurrent = Boolean(
+    lastPartial && (!lastApplied || new Date(lastPartial.imported_at) > new Date(lastApplied.imported_at)),
+  );
+
   const rawFailures = (lastBlocked?.report as { failures?: unknown })?.failures;
   const blockedFailures = Array.isArray(rawFailures)
     ? rawFailures.filter(
@@ -62,6 +85,9 @@ export default async function AdminPage() {
           typeof failure === "object" && failure !== null,
       )
     : [];
+
+  const lastSuccessfulOffset = (lastPartial?.report as { lastSuccessfulOffset?: unknown })
+    ?.lastSuccessfulOffset;
 
   const report = validateCriticalMedicines(medicines);
   const tableDate = medicines[0]?.tableDate ?? "Não informada";
@@ -90,10 +116,10 @@ export default async function AdminPage() {
           <span>Apresentações</span>
           <strong>{medicines.length.toLocaleString("pt-BR")}</strong>
         </div>
-        <div className={lastBlocked ? "admin-card danger" : "admin-card"}>
+        <div className={blockedIsCurrent ? "admin-card danger" : "admin-card"}>
           <FileCheck2 size={22} />
-          <span>{lastBlocked ? "Edição bloqueada" : "Tabela vigente"}</span>
-          <strong>{lastBlocked ? String(lastBlocked.table_date) : tableDate}</strong>
+          <span>{blockedIsCurrent ? "Edição bloqueada" : "Tabela vigente"}</span>
+          <strong>{blockedIsCurrent ? String(lastBlocked!.table_date) : tableDate}</strong>
         </div>
         <div className="admin-card">
           <CheckCircle2 size={22} />
@@ -111,7 +137,13 @@ export default async function AdminPage() {
         <div className="admin-panel-title">
           <div>
             <p className="eyebrow">Atualização automática</p>
-            <h2>{lastBlocked ? "Edição bloqueada por uma trava" : "Em dia"}</h2>
+            <h2>
+              {blockedIsCurrent
+                ? "Edição bloqueada por uma trava"
+                : partialIsCurrent
+                  ? "Base pode estar mista entre edições"
+                  : "Em dia"}
+            </h2>
           </div>
           <UploadCloud size={22} />
         </div>
@@ -125,7 +157,7 @@ export default async function AdminPage() {
           <p className="admin-copy">Nenhuma edição registrada ainda pela automação.</p>
         )}
 
-        {lastBlocked ? (
+        {blockedIsCurrent ? (
           <div className="admin-list">
             {blockedFailures.map((failure, index) => (
               <article className="admin-issue" key={`${failure.name ?? "falha"}-${index}`}>
@@ -137,6 +169,24 @@ export default async function AdminPage() {
               Para destravar, ajuste o limite correspondente em `scripts/cmed_limits.py` e rode a
               automação de novo. Não há publicação forçada, por decisão de projeto.
             </p>
+          </div>
+        ) : null}
+
+        {partialIsCurrent ? (
+          <div className="admin-list">
+            <article className="admin-issue">
+              <strong>Seed interrompido no meio da importação</strong>
+              <p>
+                A última tentativa de importar {lastPartial ? String(lastPartial.table_date) : "a edição mais recente"}{" "}
+                falhou depois de gravar só parte dos lotes. A base pode estar misturando preços da
+                edição anterior com os da edição nova
+                {typeof lastSuccessfulOffset === "number"
+                  ? `; o último lote concluído com sucesso parou no deslocamento ${lastSuccessfulOffset}.`
+                  : "."}{" "}
+                Rode a automação de novo para completar o seed. Não há publicação forçada, por decisão
+                de projeto.
+              </p>
+            </article>
           </div>
         ) : null}
       </section>
