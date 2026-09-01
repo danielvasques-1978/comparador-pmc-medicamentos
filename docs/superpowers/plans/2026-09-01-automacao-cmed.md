@@ -892,17 +892,20 @@ Em `scripts/validate_critical_medicines.mjs`, troque as duas primeiras linhas po
 
 ```javascript
 import fs from "node:fs";
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import criticalMedicines from "../src/data/critical-medicines.json" with { type: "json" };
 
+const DEFAULT_INPUT = fileURLToPath(new URL("../src/data/medicines.json", import.meta.url));
+
 const args = process.argv.slice(2);
 const asJson = args.includes("--json");
-const inputPath = args.find((arg) => !arg.startsWith("--"))
-  ?? path.join(process.cwd(), "src", "data", "medicines.json");
+const inputPath = args.find((arg) => !arg.startsWith("--")) ?? DEFAULT_INPUT;
 
 const medicines = JSON.parse(fs.readFileSync(inputPath, "utf8"));
 ```
+
+O caminho padrão é ancorado no próprio módulo, não em `process.cwd()`. O import estático que existia antes resolvia relativo ao arquivo, e um orquestrador que rode a partir de outro diretório precisa do mesmo comportamento. Não use `new URL(import.meta.url).pathname`, que no Windows devolve `/C:/…` e é rejeitado pelo `fs`.
 
 Remova a linha `const medicines = rawMedicines;` que existia adiante.
 
