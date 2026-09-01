@@ -18,13 +18,22 @@ Aplicação Next.js para comparar PMC de apresentações de medicamentos por UF/
 
 ```powershell
 npm run dev
-npm run import:cmed -- caminho/planilha.xlsx src/data/medicines.json
 npm run update:cmed
 npm run migrate:neon
 npm run validate:critical
-npm run seed:neon
 npm run build
 ```
+
+`update:cmed` é o caminho normal: baixa a edição mais recente da CMED, roda as cinco travas de sanidade e só publica (`src/data/medicines.json` e Neon) se todas passarem. Não existe publicação forçada.
+
+Dois comandos adicionais existem para uso manual e **não passam por nenhuma trava**:
+
+```powershell
+npm run import:cmed -- caminho/planilha.xlsx src/data/medicines.json
+npm run seed:neon
+```
+
+`import:cmed` sobrescreve `medicines.json` diretamente a partir de uma planilha, e `seed:neon` grava esse arquivo no banco — nenhum dos dois valida volume, preço, cobertura de EAN ou medicamentos críticos antes de escrever. Use-os só para depuração local; a base publicada deve vir sempre de `update:cmed`.
 
 ## Banco
 
