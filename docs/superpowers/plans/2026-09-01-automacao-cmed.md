@@ -366,7 +366,27 @@ def find_commercialization_column(columns: dict[str, int]) -> str:
     if not matches:
         raise ValueError("Coluna COMERCIALIZAÇÃO <ano> não encontrada na planilha CMED.")
     return sorted(matches)[-1]
+
+
+def optional_text(row: tuple, columns: dict[str, int], column: str) -> str | None:
+    if column not in columns:
+        return None
+    return clean(row[columns[column]]) or None
+
+
+def optional_digits(row: tuple, columns: dict[str, int], column: str) -> str | None:
+    if column not in columns:
+        return None
+    return clean_code(row[columns[column]]) or None
+
+
+def flag(row: tuple, columns: dict[str, int], column: str) -> bool:
+    if column not in columns:
+        return False
+    return clean(row[columns[column]]).casefold() == "sim"
 ```
+
+São funções de módulo, não closures definidas dentro do laço — o laço percorre dezenas de milhares de linhas.
 
 Em `import_cmed`, troque a lista `required` para não citar o ano literal e para exigir as colunas novas:
 
@@ -385,36 +405,22 @@ Em `import_cmed`, troque a lista `required` para não citar o ano literal e para
     ]
 ```
 
-Ainda em `import_cmed`, substitua a leitura do GGREM e acrescente os campos novos ao dicionário:
+Ainda em `import_cmed`, dentro do laço, troque a leitura do GGREM para usar `clean_code`:
 
 ```python
         ggrem_code = clean_code(row[columns["CÓDIGO GGREM"]])
-
-        def optional(column: str) -> str | None:
-            if column not in columns:
-                return None
-            return clean(row[columns[column]]) or None
-
-        def optional_code(column: str) -> str | None:
-            if column not in columns:
-                return None
-            return clean_code(row[columns[column]]) or None
 ```
 
-E, dentro do `medicines.append({...})`, some as chaves:
+E, dentro do `medicines.append({...})`, some as chaves novas e substitua a linha de `commercialized`:
 
 ```python
-                "ean1": optional_code("EAN 1"),
-                "ean2": optional_code("EAN 2"),
-                "ean3": optional_code("EAN 3"),
-                "therapeuticClass": optional("CLASSE TERAPÊUTICA"),
-                "tarja": optional("TARJA"),
-                "hospitalRestricted": clean(
-                    row[columns["RESTRIÇÃO HOSPITALAR"]]
-                ).casefold() == "sim"
-                if "RESTRIÇÃO HOSPITALAR" in columns
-                else False,
-                "commercialized": clean(row[columns[commercialization_column]]).casefold() == "sim",
+                "ean1": optional_digits(row, columns, "EAN 1"),
+                "ean2": optional_digits(row, columns, "EAN 2"),
+                "ean3": optional_digits(row, columns, "EAN 3"),
+                "therapeuticClass": optional_text(row, columns, "CLASSE TERAPÊUTICA"),
+                "tarja": optional_text(row, columns, "TARJA"),
+                "hospitalRestricted": flag(row, columns, "RESTRIÇÃO HOSPITALAR"),
+                "commercialized": flag(row, columns, commercialization_column),
 ```
 
 Remova a linha antiga que lia `COMERCIALIZAÇÃO 2025` diretamente. Ajuste a mensagem final de `main` para não citar o ano:
