@@ -32,9 +32,20 @@ if (isMain) {
   const medicines = rawMedicines;
   const first = medicines[0];
 
+  // Checked up front, before anything is written: a bad table date would
+  // otherwise only surface after every batch had already been seeded,
+  // leaving the same partially-applied state the batch-failure handling
+  // below exists to avoid.
+  const tableDate = first?.tableDate ?? null;
+  const isoTableDate = toIsoDate(tableDate);
+
+  if (!isoTableDate) {
+    throw new Error(`Data de tabela inesperada: ${tableDate}`);
+  }
+
   const importRows = await sql`
-    insert into price_imports (source_name, source_file, table_date, row_count)
-    values (${first?.source ?? "CMED/Anvisa"}, ${"Lista de preços CMED.xlsx"}, ${first?.tableDate ?? "Não informada"}, ${medicines.length})
+    insert into price_imports (source_name, source_file, table_date, row_count, status)
+    values (${first?.source ?? "CMED/Anvisa"}, ${"Lista de preços CMED.xlsx"}, ${first?.tableDate ?? "Não informada"}, ${medicines.length}, ${"pending"})
     returning id
   `;
 
@@ -130,17 +141,29 @@ if (isMain) {
     }
   };
 
-  for (let index = 0; index < medicines.length; index += batchSize) {
-    const batch = medicines.slice(index, index + batchSize);
-    await runBatch(batch, index);
-    console.log(`Seeded ${Math.min(index + batch.length, medicines.length)} / ${medicines.length}`);
-  }
+  let lastSuccessfulOffset = -1;
 
-  const tableDate = first?.tableDate ?? null;
-  const isoTableDate = toIsoDate(tableDate);
-
-  if (!isoTableDate) {
-    throw new Error(`Data de tabela inesperada: ${tableDate}`);
+  try {
+    for (let index = 0; index < medicines.length; index += batchSize) {
+      const batch = medicines.slice(index, index + batchSize);
+      await runBatch(batch, index);
+      lastSuccessfulOffset = index;
+      console.log(`Seeded ${Math.min(index + batch.length, medicines.length)} / ${medicines.length}`);
+    }
+  } catch (error) {
+    // A batch that exhausts its retries here would otherwise leave the
+    // price_imports row claiming (via the default/'pending' state) an
+    // outcome that never happened, while the medicines table itself is
+    // left mixed between the previous edition and however much of this
+    // one made it in. Record that truthfully before rethrowing so /admin
+    // can surface it instead of silently serving a blended table.
+    await sql`
+      update price_imports
+         set status = 'partial',
+             report = ${JSON.stringify({ lastSuccessfulOffset })}::jsonb
+       where id = ${importId}
+    `;
+    throw error;
   }
 
   await sql`
@@ -155,6 +178,12 @@ if (isMain) {
        set delisted_at = null,
            last_seen_table_date = ${tableDate}
      where import_id = ${importId}
+  `;
+
+  await sql`
+    update price_imports
+       set status = 'applied'
+     where id = ${importId}
   `;
 
   console.log("Neon seed complete.");
