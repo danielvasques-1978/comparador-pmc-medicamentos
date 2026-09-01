@@ -34,21 +34,27 @@ Os scripts leem `DATABASE_URL` de `.env.local`. Se o arquivo estiver dentro de `
 
 O seed aplica a base extraída do PDF, remove correções ruins conhecidas do parser e inclui os registros suplementares críticos de `src/data/manual-critical-medicines.json`.
 
-## Revisão Mensal
+## Atualização Automática
 
-Antes de publicar uma nova tabela:
+Um workflow do GitHub Actions (`.github/workflows/cmed-update.yml`) roda `npm run update:cmed` diariamente. Quando sai uma edição nova da CMED e ela passa nas travas de sanidade, o workflow publica sozinho: atualiza `src/data/medicines.json`, comita como `github-actions[bot]` e empurra para `main`, o que dispara o deploy na Vercel.
 
-```powershell
-npm run validate:critical
-```
+Quando uma trava reprova a edição, o passo de atualização falha, o passo de commit não roda, o GitHub Actions envia e-mail de falha, e nada é publicado. Os limites de cada trava (variação de volume, variação de preço, cobertura de EAN, perdas de medicamentos críticos) vivem em `scripts/cmed_limits.py`. Não existe publicação forçada: não há flag, variável de ambiente ou override que contorne uma trava reprovada — ajustar o limite no código é o único caminho previsto.
 
-No app local, abra `/admin` para conferir:
+No app publicado, abra `/admin` para conferir:
 
 - total de apresentações carregadas;
-- data da tabela;
-- medicamentos críticos validados;
-- medicamentos críticos ausentes naquela edição;
+- data da tabela vigente;
+- se a última edição foi bloqueada, e por qual trava;
+- medicamentos críticos validados e ausentes naquela edição;
 - quantidade de registros suplementares usados.
+
+### Pré-requisitos operacionais (passos manuais, feitos uma vez)
+
+Estes três passos exigem acesso aos painéis da Vercel e do GitHub e não são feitos pelo pipeline:
+
+1. Em Settings → Git do projeto na Vercel, conectar o repositório `danielvasques-1978/comparador-pmc-medicamentos` e definir `main` como branch de produção.
+2. Em Settings → Secrets and variables → Actions do repositório, cadastrar o secret `DATABASE_URL` com a connection string do Neon.
+3. Disparar manualmente o workflow `Atualização CMED` uma primeira vez (Actions → `workflow_dispatch`), para confirmar que o job termina verde e que o commit gerado dispara o deploy na Vercel.
 
 ## Vercel
 

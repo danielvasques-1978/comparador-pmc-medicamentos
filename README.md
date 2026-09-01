@@ -19,6 +19,7 @@ Aplicação Next.js para comparar PMC de apresentações de medicamentos por UF/
 ```powershell
 npm run dev
 npm run import:cmed -- caminho/planilha.xlsx src/data/medicines.json
+npm run update:cmed
 npm run migrate:neon
 npm run validate:critical
 npm run seed:neon
