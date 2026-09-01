@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, URL } from "node:url";
 
 import criticalMedicines from "../src/data/critical-medicines.json" with { type: "json" };
 
