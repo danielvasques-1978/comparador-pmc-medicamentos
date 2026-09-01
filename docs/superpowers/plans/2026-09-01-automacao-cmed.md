@@ -1286,8 +1286,12 @@ export function toIsoDate(tableDate) {
   return `${year}-${month}-${day}`;
 }
 
-const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, "/").split("/").pop());
+const isMain = process.argv[1]
+  ? import.meta.url === pathToFileURL(process.argv[1]).href
+  : false;
 ```
+
+Isso exige `import { pathToFileURL } from "node:url";` junto aos demais imports. Comparar a URL completa é o teste correto — comparar nomes de arquivo daria falso positivo com arquivos homônimos em pastas diferentes.
 
 Envolva todo o código existente de execução — de `loadLocalEnv()` até o `console.log` final — num `if (isMain) { ... }`. Dentro dele, substitua a linha final de exclusão:
 
