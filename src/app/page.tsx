@@ -10,5 +10,15 @@ export default async function Home() {
   const formas = Array.from(new Set(medicines.map((item) => inferForm(item.presentation)))).sort((a, b) =>
     a.localeCompare(b, "pt-BR"),
   );
-  return <PmcComparator formas={formas} tipos={tipos} />;
+  // A data da edição e a fonte são a credencial da página inteira, e precisam
+  // aparecer antes da primeira busca: a resposta só as sobrescreve quando chega.
+  const base = medicines[0];
+  return (
+    <PmcComparator
+      formas={formas}
+      tipos={tipos}
+      tableDate={base?.tableDate ?? "Não informada"}
+      source={base?.source ?? "Fonte importada"}
+    />
+  );
 }

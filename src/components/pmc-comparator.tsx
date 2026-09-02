@@ -81,7 +81,17 @@ function readUfIcmsMap() {
   }, {} as UfIcmsMap);
 }
 
-export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: string[] }) {
+export function PmcComparator({
+  tipos,
+  formas,
+  tableDate: tableDateBase,
+  source: sourceBase,
+}: {
+  tipos: string[];
+  formas: string[];
+  tableDate: string;
+  source: string;
+}) {
   const [query, setQuery] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -143,7 +153,8 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
 
   const selectedRate = ufMap[uf] ?? defaultUfIcmsMap[uf];
   const selectedZone = selectedRate;
-  const tableDate = resposta?.comPmc[0]?.tableDate ?? resposta?.semPmc[0]?.tableDate ?? "Não informada";
+  const tableDate = resposta?.comPmc[0]?.tableDate ?? resposta?.semPmc[0]?.tableDate ?? tableDateBase;
+  const source = resposta?.comPmc[0]?.source ?? resposta?.semPmc[0]?.source ?? sourceBase;
   const activeQuery = query.trim();
   const hasSearch = normalize(activeQuery).length >= 2;
   const hasPaidAccess = !billingEnabled || !billingRequired || planStatus === "active" || planStatus === "trialing";
@@ -685,7 +696,7 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
           </div>
           <div className="source-pill">
             <ShieldCheck size={16} />
-            <span>{resposta?.comPmc[0]?.source ?? resposta?.semPmc[0]?.source ?? "Fonte importada"}</span>
+            <span>{source}</span>
           </div>
         </div>
 
