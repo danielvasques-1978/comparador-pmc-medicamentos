@@ -125,6 +125,8 @@ export function PmcComparator({
   const [subscriptionCurrentPeriodEnd, setSubscriptionCurrentPeriodEnd] = useState<string | null>(null);
   const [authMessage, setAuthMessage] = useState("");
   const [resposta, setResposta] = useState<RespostaBusca | null>(null);
+  const [consultaDaResposta, setConsultaDaResposta] = useState<string | null>(null);
+  const [historicoPendente, setHistoricoPendente] = useState<string | null>(null);
   const [buscando, setBuscando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
@@ -191,7 +193,10 @@ export function PmcComparator({
           const corpo = (await r.json().catch(() => null)) as { erro?: string } | null;
           throw new ErroDoServidor(corpo?.erro ?? "Não foi possível consultar a base.");
         })
-        .then((dados) => setResposta(dados))
+        .then((dados) => {
+          setResposta(dados);
+          setConsultaDaResposta(consulta);
+        })
         .catch((falha: Error) => {
           if (falha.name === "AbortError") return;
           setErro(falha instanceof ErroDoServidor ? falha.message : MENSAGEM_DE_REDE);
@@ -208,6 +213,15 @@ export function PmcComparator({
   function retryLastSearch() {
     setRetryTick((tick) => tick + 1);
   }
+
+  // O submit só sabe o termo; a contagem chega 300 ms depois, com a resposta.
+  // Gravar no submit registrava a contagem da busca anterior — zero na primeira.
+  useEffect(() => {
+    if (!historicoPendente || !resposta) return;
+    if (consultaDaResposta !== historicoPendente) return;
+    void saveSearchHistory(historicoPendente, resposta.totalComPmc + resposta.totalSemPmc);
+    setHistoricoPendente(null);
+  }, [consultaDaResposta, historicoPendente, resposta]);
 
   const recebidos = useMemo(
     () => [...(resposta?.comPmc ?? []), ...(resposta?.semPmc ?? [])],
@@ -385,7 +399,7 @@ export function PmcComparator({
     const next = [trimmed, ...recentSearches.filter((item) => item !== trimmed)].slice(0, 6);
     setRecentSearches(next);
     writeJson(storageKeys.recentSearches, next);
-    void saveSearchHistory(trimmed, visibleRows.length + semPmc.length);
+    setHistoricoPendente(trimmed);
   }
 
   async function submitAuth(event: React.FormEvent<HTMLFormElement>) {
