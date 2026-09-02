@@ -11,7 +11,7 @@ from pathlib import Path
 from scripts.check_cmed import run_checks
 from scripts.diff_cmed import build_report
 from scripts.fetch_cmed import download, fetch_page, find_edition
-from scripts.import_cmed_xlsx import import_cmed
+from scripts.import_cmed_xlsx import import_cmed, pf_columns_present
 
 ROOT = Path(__file__).resolve().parents[1]
 CURRENT_JSON = ROOT / "src" / "data" / "medicines.json"
@@ -22,6 +22,12 @@ def _parse(date_text: str) -> datetime | None:
         return datetime.strptime(date_text, "%d/%m/%Y")
     except (ValueError, TypeError):
         return None
+
+
+def exit_code_for(*, applied: bool, pf_columns_missing: bool) -> int:
+    if not applied:
+        return 1
+    return 2 if pf_columns_missing else 0
 
 
 def decide(current_table_date: str, edition_published: str) -> bool:
@@ -68,13 +74,15 @@ def main() -> int:
                 return 0
             xlsx_path = download(edition.url, work / edition.filename)
 
-        candidate = import_cmed(xlsx_path)
+        candidate_columns: dict[str, int] = {}
+        candidate = import_cmed(xlsx_path, candidate_columns)
+        pf_columns_missing = not pf_columns_present(candidate_columns)
         candidate_json = work / "candidate.json"
         candidate_json.write_text(
             json.dumps(candidate, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
         )
 
-        report = build_report(current, candidate)
+        report = build_report(current, candidate, pf_columns_missing)
         failures = run_checks(report, run_critical(CURRENT_JSON), run_critical(candidate_json))
 
         report["failures"] = [{"name": item.name, "detail": item.detail} for item in failures]
@@ -84,7 +92,7 @@ def main() -> int:
             for failure in failures:
                 print(f"[{failure.name}] {failure.detail}", file=sys.stderr)
             record_blocked(report)
-            return 1
+            return exit_code_for(applied=False, pf_columns_missing=pf_columns_missing)
 
         CURRENT_JSON.write_text(
             json.dumps(candidate, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
@@ -120,16 +128,23 @@ def main() -> int:
                         "manualmente esse arquivo antes de rodar novamente.",
                         file=sys.stderr,
                     )
-                    return 1
+                    return exit_code_for(applied=False, pf_columns_missing=pf_columns_missing)
                 print(
                     f"Edição {report['candidateTableDate']} revertida: a atualização do "
                     "banco Neon falhou, então medicines.json foi restaurado para a edição "
                     f"anterior ({current_table_date or 'nenhuma'}).",
                     file=sys.stderr,
                 )
-                return 1
+                return exit_code_for(applied=False, pf_columns_missing=pf_columns_missing)
 
-    return 0
+    code = exit_code_for(applied=True, pf_columns_missing=pf_columns_missing)
+    if code == 2:
+        print(
+            "Edição aplicada, mas a planilha não trouxe colunas de Preço Fábrica: "
+            "o grupo de uso restrito hospitalar não foi importado.",
+            file=sys.stderr,
+        )
+    return code
 
 
 def record_blocked(report: dict) -> None:

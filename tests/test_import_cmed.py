@@ -268,3 +268,12 @@ def test_descarta_linha_sem_pmc_e_sem_pf(build_cmed_workbook):
     ])
 
     assert import_cmed(path) == []
+
+
+def test_detecta_ausencia_das_colunas_de_pf(build_cmed_workbook):
+    from scripts.import_cmed_xlsx import PF_COLUMNS, pf_columns_present
+
+    presentes = {nome: i for i, nome in enumerate(PF_COLUMNS.values())}
+    assert pf_columns_present(presentes) is True
+    assert pf_columns_present({"PMC 18 %": 0}) is False
+    assert pf_columns_present({"PF 18 %": 0}) is True

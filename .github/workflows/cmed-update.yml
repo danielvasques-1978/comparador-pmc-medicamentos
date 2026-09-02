@@ -31,9 +31,16 @@ jobs:
           node --test
 
       - name: Atualizar a base
+        id: update
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: python -m scripts.update_cmed
+        run: |
+          set +e
+          python -m scripts.update_cmed
+          code=$?
+          set -e
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          test "$code" != "1"
 
       - name: Commitar a edição nova
         run: |
@@ -46,3 +53,10 @@ jobs:
           else
             echo "Nenhuma alteração na base."
           fi
+
+      - name: Avisar se faltaram colunas de Preço Fábrica
+        if: steps.update.outputs.code == '2'
+        run: |
+          echo "A edição foi publicada, mas a planilha da CMED não trouxe colunas de Preço Fábrica."
+          echo "O grupo de uso restrito hospitalar não entrou nesta edição."
+          exit 1

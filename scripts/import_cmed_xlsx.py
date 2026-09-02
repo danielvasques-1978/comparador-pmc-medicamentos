@@ -31,6 +31,10 @@ PF_COLUMNS = {
 }
 
 
+def pf_columns_present(columns: dict[str, int]) -> bool:
+    return any(column in columns for column in PF_COLUMNS.values())
+
+
 def clean(value: object) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
@@ -116,7 +120,7 @@ def extract_table_date(sheet) -> str:
     raise ValueError("Data de publicação não encontrada na planilha CMED.")
 
 
-def import_cmed(input_path: Path) -> list[dict[str, object]]:
+def import_cmed(input_path: Path, columns_out: dict[str, int] | None = None) -> list[dict[str, object]]:
     # read_only workbooks memory-map the .xlsx; openpyxl only releases that
     # handle on an explicit close(), so this must run even if a malformed
     # spreadsheet raises partway through the body below (e.g. missing
@@ -128,6 +132,11 @@ def import_cmed(input_path: Path) -> list[dict[str, object]]:
         table_date = extract_table_date(sheet)
         headers = [clean(value) for value in next(sheet.iter_rows(min_row=header_row, max_row=header_row, values_only=True))]
         columns = {header: index for index, header in enumerate(headers)}
+        # Callers that need to know which columns the spreadsheet actually
+        # had (e.g. to detect a missing Preço Fábrica group) can pass a dict
+        # here instead of re-opening and re-parsing the workbook themselves.
+        if columns_out is not None:
+            columns_out.update(columns)
 
         commercialization_column = find_commercialization_column(columns)
 

@@ -24,7 +24,7 @@ def _pmc18(item: dict) -> float | None:
     return value if isinstance(value, (int, float)) else None
 
 
-def build_report(current: list[dict], candidate: list[dict]) -> dict:
+def build_report(current: list[dict], candidate: list[dict], pf_columns_missing: bool = False) -> dict:
     before = {item["id"]: item for item in current}
     after = {item["id"]: item for item in candidate}
 
@@ -74,6 +74,7 @@ def build_report(current: list[dict], candidate: list[dict]) -> dict:
         "priceChanges": changes[:MAX_LISTED_CHANGES],
         "maxPriceVariation": abs(changes[0]["variation"]) if changes else 0.0,
         "pfSemHospitalar": sem_hospitalar,
+        "pfColumnsMissing": pf_columns_missing,
     }
 
 

@@ -10,6 +10,16 @@ def test_nao_faz_nada_quando_a_edicao_e_a_mesma():
     assert decide("11/08/2026", "11/08/2026") is False
 
 
+def test_sai_com_2_quando_faltam_colunas_de_pf(monkeypatch, tmp_path):
+    from scripts import update_cmed
+
+    monkeypatch.setattr(update_cmed, "CURRENT_JSON", tmp_path / "base.json")
+    update_cmed.CURRENT_JSON.write_text("[]", encoding="utf-8")
+    assert update_cmed.exit_code_for(applied=True, pf_columns_missing=True) == 2
+    assert update_cmed.exit_code_for(applied=True, pf_columns_missing=False) == 0
+    assert update_cmed.exit_code_for(applied=False, pf_columns_missing=True) == 1
+
+
 def test_age_quando_ha_edicao_mais_recente():
     assert decide("10/06/2026", "11/08/2026") is True
 
