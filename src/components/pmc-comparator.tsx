@@ -16,13 +16,11 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { buscar, construirTokensEstritos, normalize, tokensMatchText } from "@/lib/busca";
-import criticalMedicines from "@/data/critical-medicines.json";
+import { inferForm, normalize } from "@/lib/busca";
 import { defaultUfIcmsMap, icmsRates, isIcmsRate, ufCodes } from "@/lib/icms";
 import { precoAplicavel, temPmc } from "@/lib/precos";
-import type { IcmsRate, Medicine, UfCode, UfIcmsMap } from "@/lib/types";
-
-const strictSearchTokens = construirTokensEstritos(criticalMedicines);
+import type { RespostaBusca } from "@/lib/resposta-busca";
+import type { IcmsRate, UfCode, UfIcmsMap } from "@/lib/types";
 
 type SortMode = "group-lab" | "price-asc" | "price-desc" | "name";
 type AuthPayload = {
@@ -51,26 +49,6 @@ const storageKeys = {
   ufMap: "comparador-pmc:uf-map",
   recentSearches: "comparador-pmc:recent-searches",
 };
-
-function matchesSearch(item: Medicine, search: string) {
-  if (!search) return true;
-  return tokensMatchText(search, `${item.name} ${item.activeIngredient}`, strictSearchTokens);
-}
-
-function matchesRelatedIngredient(item: Medicine, relatedIngredients: Set<string>) {
-  return relatedIngredients.has(normalize(item.activeIngredient));
-}
-
-function inferForm(presentation: string) {
-  const text = normalize(presentation);
-  if (text.includes("comp")) return "Comprimido";
-  if (text.includes("caps")) return "Cápsula";
-  if (text.includes("xpe") || text.includes("susp")) return "Xarope/suspensão";
-  if (text.includes("inj") || text.includes("amp") || text.includes("fa ")) return "Injetável";
-  if (text.includes("creme") || text.includes("gel") || text.includes("pom")) return "Tópico";
-  if (text.includes("sol") || text.includes("got")) return "Solução/gotas";
-  return "Outras";
-}
 
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -103,7 +81,7 @@ function readUfIcmsMap() {
   }, {} as UfIcmsMap);
 }
 
-export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
+export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: string[] }) {
   const [query, setQuery] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -125,6 +103,8 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
   const [planStatus, setPlanStatus] = useState("free");
   const [subscriptionCurrentPeriodEnd, setSubscriptionCurrentPeriodEnd] = useState<string | null>(null);
   const [authMessage, setAuthMessage] = useState("");
+  const [resposta, setResposta] = useState<RespostaBusca | null>(null);
+  const [buscando, setBuscando] = useState(false);
 
   useEffect(() => {
     setFavorites(readJson<string[]>(storageKeys.favorites, []));
@@ -161,70 +141,60 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
 
   const selectedRate = ufMap[uf] ?? defaultUfIcmsMap[uf];
   const selectedZone = selectedRate;
-  const tableDate = medicines[0]?.tableDate ?? "Não informada";
+  const tableDate = resposta?.comPmc[0]?.tableDate ?? resposta?.semPmc[0]?.tableDate ?? "Não informada";
   const activeQuery = query.trim();
   const hasSearch = normalize(activeQuery).length >= 2;
   const hasPaidAccess = !billingEnabled || !billingRequired || planStatus === "active" || planStatus === "trialing";
 
-  const relatedIngredients = useMemo(() => {
-    const search = normalize(activeQuery);
-    if (!search) return new Set<string>();
+  useEffect(() => {
+    const consulta = query.trim();
+    if (consulta.length < 2 && !onlyFavorites) {
+      setResposta(null);
+      return;
+    }
 
-    const ingredients = new Set<string>();
-    medicines.forEach((item) => {
-      if (
-        tokensMatchText(search, item.name, strictSearchTokens) ||
-        tokensMatchText(search, item.activeIngredient, strictSearchTokens)
-      ) {
-        ingredients.add(normalize(item.activeIngredient));
-      }
-    });
-    return ingredients;
-  }, [activeQuery, medicines]);
+    const controlador = new AbortController();
+    const timer = setTimeout(() => {
+      setBuscando(true);
+      const params = onlyFavorites && consulta.length < 2
+        ? `ids=${encodeURIComponent(favorites.join(","))}`
+        : `q=${encodeURIComponent(consulta)}`;
+      fetch(`/api/medicines/search?${params}`, { signal: controlador.signal })
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("falha"))))
+        .then((dados) => setResposta(dados))
+        .catch((erro) => {
+          if (erro.name !== "AbortError") setResposta(null);
+        })
+        .finally(() => setBuscando(false));
+    }, 300);
 
-  const formOptions = useMemo(() => {
-    const forms = new Set<string>();
-    medicines.forEach((item) => forms.add(inferForm(item.presentation)));
-    return ["Todas", ...Array.from(forms).sort((a, b) => a.localeCompare(b, "pt-BR"))];
-  }, [medicines]);
+    return () => {
+      clearTimeout(timer);
+      controlador.abort();
+    };
+  }, [favorites, onlyFavorites, query]);
 
-  const kindOptions = useMemo(
-    () => ["Todos", ...Array.from(new Set(medicines.map((item) => item.kind))).sort((a, b) => a.localeCompare(b, "pt-BR"))],
-    [medicines],
-  );
-
-  const labOptions = useMemo(() => {
-    const search = normalize(activeQuery);
-    const labs = new Set<string>();
-    medicines.forEach((item) => {
-      if (!search && !onlyFavorites) return;
-      if (!matchesSearch(item, search) && !matchesRelatedIngredient(item, relatedIngredients)) return;
-      if (kind !== "Todos" && item.kind !== kind) return;
-      if (form !== "Todas" && inferForm(item.presentation) !== form) return;
-      labs.add(item.laboratory);
-    });
-    return ["Todos", ...Array.from(labs).sort((a, b) => a.localeCompare(b, "pt-BR"))];
-  }, [activeQuery, form, kind, medicines, onlyFavorites, relatedIngredients]);
+  const kindOptions = ["Todos", ...tipos];
+  const formOptions = ["Todas", ...formas];
+  const labOptions = ["Todos", ...(resposta?.laboratorios ?? [])];
 
   useEffect(() => {
     if (!labOptions.includes(lab)) setLab("Todos");
   }, [lab, labOptions]);
 
   const filtered = useMemo(() => {
-    const search = normalize(activeQuery);
     const favoriteSet = new Set(favorites);
     const max = maxPrice ? Number(maxPrice.replace(",", ".")) : null;
     if (!hasPaidAccess) return [];
 
-    const rows = medicines.filter((item) => {
-      if (!search && !onlyFavorites) return false;
+    const rows = [...(resposta?.comPmc ?? []), ...(resposta?.semPmc ?? [])].filter((item) => {
       if (onlyFavorites && !favoriteSet.has(item.id)) return false;
       if (kind !== "Todos" && item.kind !== kind) return false;
       if (lab !== "Todos" && item.laboratory !== lab) return false;
       if (form !== "Todas" && inferForm(item.presentation) !== form) return false;
       const { valor } = precoAplicavel(item, selectedZone);
       if (max !== null && Number.isFinite(max) && temPmc(item) && valor !== null && valor > max) return false;
-      return matchesSearch(item, search) || matchesRelatedIngredient(item, relatedIngredients);
+      return true;
     });
 
     rows.sort((a, b) => {
@@ -242,7 +212,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     });
 
     return rows;
-  }, [activeQuery, favorites, form, hasPaidAccess, kind, lab, maxPrice, medicines, onlyFavorites, relatedIngredients, selectedZone, sortMode]);
+  }, [favorites, form, hasPaidAccess, kind, lab, maxPrice, onlyFavorites, resposta, selectedZone, sortMode]);
 
   const visibleRows = filtered.filter(temPmc).slice(0, 250);
   const semPmc = filtered.filter((item) => !temPmc(item)).slice(0, 250);
@@ -675,16 +645,18 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
           <div>
             <h2>Preço máximo ao consumidor</h2>
             <p>
-              {hasSearch
-                ? hasPaidAccess
-                  ? `Busca aplicada: "${activeQuery}", incluindo equivalentes pelo princípio ativo. Exibindo até 250 resultados.`
-                  : "Assinatura necessária para exibir resultados."
-                : "Digite pelo menos 2 letras do medicamento ou princípio ativo."}
+              {buscando
+                ? "Buscando…"
+                : hasSearch
+                  ? hasPaidAccess
+                    ? `Busca aplicada: "${activeQuery}", incluindo equivalentes pelo princípio ativo. Exibindo até 250 resultados.`
+                    : "Assinatura necessária para exibir resultados."
+                  : "Digite pelo menos 2 letras do medicamento ou princípio ativo."}
             </p>
           </div>
           <div className="source-pill">
             <ShieldCheck size={16} />
-            <span>{medicines[0]?.source ?? "Fonte importada"}</span>
+            <span>{resposta?.comPmc[0]?.source ?? resposta?.semPmc[0]?.source ?? "Fonte importada"}</span>
           </div>
         </div>
 

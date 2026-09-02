@@ -36,6 +36,17 @@ export function tokensMatchText(search: string, text: string, estritos: Set<stri
   );
 }
 
+export function inferForm(presentation: string) {
+  const text = normalize(presentation);
+  if (text.includes("comp")) return "Comprimido";
+  if (text.includes("caps")) return "Cápsula";
+  if (text.includes("xpe") || text.includes("susp")) return "Xarope/suspensão";
+  if (text.includes("inj") || text.includes("amp") || text.includes("fa ")) return "Injetável";
+  if (text.includes("creme") || text.includes("gel") || text.includes("pom")) return "Tópico";
+  if (text.includes("sol") || text.includes("got")) return "Solução/gotas";
+  return "Outras";
+}
+
 export function buscar(medicines: Medicine[], consulta: string, estritos: Set<string>) {
   const search = normalize(consulta);
   if (!search) return [];
