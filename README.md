@@ -35,6 +35,16 @@ npm run seed:neon
 
 `import:cmed` sobrescreve `medicines.json` diretamente a partir de uma planilha, e `seed:neon` grava esse arquivo no banco — nenhum dos dois valida volume, preço, cobertura de EAN ou medicamentos críticos antes de escrever. Use-os só para depuração local; a base publicada deve vir sempre de `update:cmed`.
 
+### Teste de ouro da busca
+
+`tests/busca.test.ts` roda sobre uma base congelada (`tests/fixtures/busca-base.json`) e compara o resultado com uma referência (`tests/fixtures/busca-golden.json`). As duas são regeradas juntas por:
+
+```powershell
+node scripts/gerar_golden.mjs
+```
+
+Regerar é **ato deliberado**: faz-se quando o comportamento pretendido da busca muda, e a mudança de resultado que o script imprime é o que se revisa. Não é passo de rotina, e não é a resposta para um teste vermelho — a base do teste é congelada justamente para que a edição nova da CMED não mexa nele. Se o teste falhou sem que a busca tenha sido alterada, o certo é investigar a regressão, não regerar a referência.
+
 ## Banco
 
 O projeto usa Neon via `DATABASE_URL`. Configure `.env.local` localmente e a mesma variável no ambiente de produção da Vercel. Para liberar a rota administrativa, configure `ADMIN_EMAILS` com e-mails separados por vírgula.

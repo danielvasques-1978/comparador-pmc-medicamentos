@@ -7,7 +7,11 @@ import { buscar, construirTokensEstritos, normalize, textTokens, tokensMatchText
 
 const raiz = process.cwd();
 const criticos = JSON.parse(fs.readFileSync(path.join(raiz, "src/data/critical-medicines.json"), "utf8"));
-const medicines = JSON.parse(fs.readFileSync(path.join(raiz, "src/data/medicines.json"), "utf8"));
+// A base congelada, e não src/data/medicines.json: aquele arquivo é reescrito e
+// commitado pelo workflow diário da CMED, que roda estes testes antes de atualizar.
+// Apontar para o dado vivo faria a primeira edição nova parar o pipeline de preços.
+// Para regerar o par base + referência: node scripts/gerar_golden.mjs
+const medicines = JSON.parse(fs.readFileSync(path.join(raiz, "tests/fixtures/busca-base.json"), "utf8"));
 const golden = JSON.parse(fs.readFileSync(path.join(raiz, "tests/fixtures/busca-golden.json"), "utf8"));
 const estritos = construirTokensEstritos(criticos);
 
