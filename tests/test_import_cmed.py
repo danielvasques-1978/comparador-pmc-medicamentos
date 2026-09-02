@@ -210,3 +210,61 @@ def test_traco_da_cmed_vira_ausencia(build_cmed_workbook):
     assert item["ean3"] is None
     assert item["therapeuticClass"] is None
     assert item["tarja"] is None
+
+
+def test_importa_linha_com_pf_e_sem_pmc(build_cmed_workbook):
+    path = build_cmed_workbook([
+        {
+            "SUBSTÂNCIA": "LECANEMABE",
+            "LABORATÓRIO": "ACME S.A.",
+            "CÓDIGO GGREM": "999",
+            "EAN 1": "7898937460614",
+            "PRODUTO": "LEQEMBI",
+            "APRESENTAÇÃO": "100 MG/ML SOL DIL INFUS IV CT FA VD TRANS X 2 ML",
+            "RESTRIÇÃO HOSPITALAR": "Sim",
+            "PF 18 %": "1582,23",
+            "COMERCIALIZAÇÃO 2025": "Não",
+        }
+    ])
+
+    item = import_cmed(path)[0]
+
+    assert item["name"] == "LEQEMBI"
+    assert item["pf"]["18"] == 1582.23
+    assert all(value is None for value in item["pmc"].values())
+    assert item["hospitalRestricted"] is True
+
+
+def test_nao_grava_pf_quando_ha_pmc(build_cmed_workbook):
+    path = build_cmed_workbook([
+        {
+            "SUBSTÂNCIA": "CLONAZEPAM",
+            "LABORATÓRIO": "ACME S.A.",
+            "CÓDIGO GGREM": "111",
+            "PRODUTO": "RIVOTRIL",
+            "APRESENTAÇÃO": "2 MG",
+            "PMC 18 %": "50,28",
+            "PF 18 %": "35,10",
+            "COMERCIALIZAÇÃO 2025": "Sim",
+        }
+    ])
+
+    item = import_cmed(path)[0]
+
+    assert "pf" not in item
+    assert item["pmc"]["18"] == 50.28
+
+
+def test_descarta_linha_sem_pmc_e_sem_pf(build_cmed_workbook):
+    path = build_cmed_workbook([
+        {
+            "SUBSTÂNCIA": "NADA",
+            "LABORATÓRIO": "ACME S.A.",
+            "CÓDIGO GGREM": "222",
+            "PRODUTO": "NADA",
+            "APRESENTAÇÃO": "1 MG",
+            "COMERCIALIZAÇÃO 2025": "Não",
+        }
+    ])
+
+    assert import_cmed(path) == []

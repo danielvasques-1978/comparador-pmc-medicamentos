@@ -19,6 +19,17 @@ PMC_COLUMNS = {
     "23": "PMC 23 %",
 }
 
+PF_COLUMNS = {
+    "17": "PF 17 %",
+    "18": "PF 18 %",
+    "19": "PF 19 %",
+    "19.5": "PF 19,5 %",
+    "20": "PF 20 %",
+    "20.5": "PF 20,5 %",
+    "22.5": "PF 22,5 %",
+    "23": "PF 23 %",
+}
+
 
 def clean(value: object) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
@@ -137,7 +148,14 @@ def import_cmed(input_path: Path) -> list[dict[str, object]]:
         medicines: list[dict[str, object]] = []
         for row in sheet.iter_rows(min_row=header_row + 1, values_only=True):
             prices = {rate: parse_price(row[columns[column]]) for rate, column in PMC_COLUMNS.items()}
-            if not any(price is not None for price in prices.values()):
+            factory = {
+                rate: parse_price(row[columns[column]])
+                for rate, column in PF_COLUMNS.items()
+                if column in columns
+            }
+            has_pmc = any(price is not None for price in prices.values())
+            has_pf = any(price is not None for price in factory.values())
+            if not has_pmc and not has_pf:
                 continue
 
             ggrem_code = clean_code(row[columns["CÓDIGO GGREM"]])
@@ -167,10 +185,12 @@ def import_cmed(input_path: Path) -> list[dict[str, object]]:
                     "tableDate": table_date,
                 }
             )
+            if not has_pmc:
+                medicines[-1]["pf"] = factory
 
         ids = [medicine["id"] for medicine in medicines]
         if len(ids) != len(set(ids)):
-            raise ValueError("A planilha contém códigos GGREM duplicados entre as apresentações com PMC.")
+            raise ValueError("A planilha contém códigos GGREM duplicados entre as apresentações importadas.")
         return medicines
     finally:
         workbook.close()
