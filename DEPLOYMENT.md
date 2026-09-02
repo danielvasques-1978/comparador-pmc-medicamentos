@@ -40,7 +40,7 @@ Quando uma trava reprova a edição, o passo de atualização falha, o passo de 
 
 A trava `hospitalar` reprova a edição quando alguma apresentação sem PMC não tem `RESTRIÇÃO HOSPITALAR = Sim`, porque o aviso exibido ao usuário na seção "Sem preço máximo ao consumidor" afirma uso hospitalar para todo o grupo. O limite tolera zero exceções.
 
-Publicar o código não faz esse grupo aparecer no site: a base só passa a contê-lo quando for regerada, seja pela próxima edição da CMED que o cron importa sozinho, seja rodando `npm run update:cmed -- --force` deliberadamente. Entre o deploy e essa regeração, o site continua sem exibir a seção de apresentações sem PMC.
+Publicar o código não faz esse grupo aparecer no site: a base só passa a contê-lo quando for regerada, seja pela próxima edição da CMED que o cron importa sozinho, seja rodando `npm run update:cmed -- --force` deliberadamente. Entre o deploy e essa regeração, o site continua sem exibir a seção de apresentações sem PMC. Antes dessa primeira regeração, a migração `neon/migrations/20260902000000_pf.sql` precisa estar aplicada (`npm run migrate:neon`) — sem ela a coluna `pf` não existe, o seed falha, o rollback dispara e a edição inteira é descartada.
 
 No app publicado, abra `/admin` para conferir:
 
