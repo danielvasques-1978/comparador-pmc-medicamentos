@@ -9,15 +9,14 @@ export type RespostaBusca = {
   totalComPmc: number;
   totalSemPmc: number;
   truncado: boolean;
-  laboratorios: string[];
 };
 
+// Sem faceta de laboratório aqui de propósito: calculada sobre `encontrados`,
+// ela descreveria registros que o corte por grupo não chega a enviar, e não
+// haveria como estreitá-la por tipo e forma. O cliente a deriva do que recebeu.
 export function montarResposta(encontrados: Medicine[]): RespostaBusca {
   const comPmc = encontrados.filter(temPmc);
   const semPmc = encontrados.filter((item) => !temPmc(item));
-  const laboratorios = Array.from(new Set(encontrados.map((item) => item.laboratory))).sort((a, b) =>
-    a.localeCompare(b, "pt-BR"),
-  );
 
   return {
     comPmc: comPmc.slice(0, LIMITE_POR_GRUPO),
@@ -25,6 +24,5 @@ export function montarResposta(encontrados: Medicine[]): RespostaBusca {
     totalComPmc: comPmc.length,
     totalSemPmc: semPmc.length,
     truncado: comPmc.length > LIMITE_POR_GRUPO || semPmc.length > LIMITE_POR_GRUPO,
-    laboratorios,
   };
 }

@@ -3,12 +3,12 @@ import test from "node:test";
 
 import { LIMITE_POR_GRUPO, montarResposta } from "../src/lib/resposta-busca.ts";
 
-function med(id: string, comPmc: boolean, laboratory = "ACME") {
+function med(id: string, comPmc: boolean) {
   return {
     id,
     name: `M${id}`,
     activeIngredient: "X",
-    laboratory,
+    laboratory: "ACME",
     kind: "Genérico",
     presentation: "1 MG",
     pmc: comPmc ? { "18": 10 } : {},
@@ -35,11 +35,6 @@ test("conta antes de truncar e sinaliza o truncamento", () => {
 
 test("nao sinaliza truncamento quando cabe", () => {
   assert.equal(montarResposta([med("a", true)]).truncado, false);
-});
-
-test("lista os laboratorios encontrados, ordenados e sem repeticao", () => {
-  const r = montarResposta([med("a", true, "Zeta"), med("b", true, "Alfa"), med("c", false, "Alfa")]);
-  assert.deepEqual(r.laboratorios, ["Alfa", "Zeta"]);
 });
 
 test("conjunto vazio devolve resposta vazia e sem truncamento", () => {

@@ -182,9 +182,26 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
     setRetryTick((tick) => tick + 1);
   }
 
-  const kindOptions = ["Todos", ...tipos];
-  const formOptions = ["Todas", ...formas];
-  const labOptions = ["Todos", ...(resposta?.laboratorios ?? [])];
+  const recebidos = useMemo(
+    () => [...(resposta?.comPmc ?? []), ...(resposta?.semPmc ?? [])],
+    [resposta],
+  );
+
+  const kindOptions = useMemo(() => ["Todos", ...tipos], [tipos]);
+  const formOptions = useMemo(() => ["Todas", ...formas], [formas]);
+  // Os laboratórios saem dos registros que a resposta trouxe de fato, já
+  // estreitados por tipo e forma. Uma lista mais larga ofereceria laboratórios
+  // que a escolha atual não contém — e o auto-reset abaixo só resgata o usuário
+  // dessa tela vazia se a lista encolher junto com os filtros.
+  const labOptions = useMemo(() => {
+    const labs = new Set<string>();
+    for (const item of recebidos) {
+      if (kind !== "Todos" && item.kind !== kind) continue;
+      if (form !== "Todas" && inferForm(item.presentation) !== form) continue;
+      labs.add(item.laboratory);
+    }
+    return ["Todos", ...Array.from(labs).sort((a, b) => a.localeCompare(b, "pt-BR"))];
+  }, [form, kind, recebidos]);
 
   useEffect(() => {
     if (!labOptions.includes(lab)) setLab("Todos");
@@ -195,7 +212,7 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
     const max = maxPrice ? Number(maxPrice.replace(",", ".")) : null;
     if (!hasPaidAccess) return [];
 
-    const rows = [...(resposta?.comPmc ?? []), ...(resposta?.semPmc ?? [])].filter((item) => {
+    const rows = recebidos.filter((item) => {
       if (onlyFavorites && !favoriteSet.has(item.id)) return false;
       if (kind !== "Todos" && item.kind !== kind) return false;
       if (lab !== "Todos" && item.laboratory !== lab) return false;
@@ -220,7 +237,7 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
     });
 
     return rows;
-  }, [favorites, form, hasPaidAccess, kind, lab, maxPrice, onlyFavorites, resposta, selectedZone, sortMode]);
+  }, [favorites, form, hasPaidAccess, kind, lab, maxPrice, onlyFavorites, recebidos, selectedZone, sortMode]);
 
   const visibleRows = filtered.filter(temPmc).slice(0, 250);
   const semPmc = filtered.filter((item) => !temPmc(item)).slice(0, 250);
