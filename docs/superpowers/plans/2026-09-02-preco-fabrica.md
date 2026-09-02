@@ -998,7 +998,7 @@ pytest -v
 
 Esperado: todos passam.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add scripts/import_cmed_xlsx.py scripts/diff_cmed.py scripts/update_cmed.py .github/workflows/cmed-update.yml tests/test_import_cmed.py tests/test_update_cmed.py
