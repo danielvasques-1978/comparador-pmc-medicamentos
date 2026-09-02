@@ -361,6 +361,25 @@ h1 {
   margin: 0;
 }
 
+.stale-notice {
+  align-items: center;
+  background: #fff4f6;
+  border: 1px solid #ffc0cc;
+  border-radius: 8px;
+  color: var(--rose);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+}
+
+.stale-notice p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 .medicine-list {
   display: grid;
   gap: 8px;

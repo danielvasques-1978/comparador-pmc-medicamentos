@@ -224,6 +224,7 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
 
   const visibleRows = filtered.filter(temPmc).slice(0, 250);
   const semPmc = filtered.filter((item) => !temPmc(item)).slice(0, 250);
+  const temResultados = visibleRows.length > 0 || semPmc.length > 0;
 
   async function syncFromNeon() {
     const clientKey = getClientKey();
@@ -668,6 +669,17 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
           </div>
         </div>
 
+        {erro && temResultados ? (
+          <div className="stale-notice" role="status">
+            <p>
+              <strong>A última busca não chegou ao servidor.</strong> Os resultados abaixo são da consulta anterior.
+            </p>
+            <button className="primary-button" type="button" onClick={retryLastSearch}>
+              <span>Tentar de novo</span>
+            </button>
+          </div>
+        ) : null}
+
         {resposta?.truncado ? (
           <div className="truncation-notice" role="status">
             <p>
@@ -723,7 +735,7 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
           })}
         </div>
 
-        {visibleRows.length === 0 ? (
+        {!temResultados ? (
           erro ? (
             <div className="empty-state">
               <SlidersHorizontal size={34} />
