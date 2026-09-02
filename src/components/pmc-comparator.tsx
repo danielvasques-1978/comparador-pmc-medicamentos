@@ -275,6 +275,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
   }, [activeQuery, favorites, form, hasPaidAccess, kind, lab, maxPrice, medicines, onlyFavorites, relatedIngredients, selectedZone, sortMode]);
 
   const visibleRows = filtered.filter(temPmc).slice(0, 250);
+  const semPmc = filtered.filter((item) => !temPmc(item)).slice(0, 250);
 
   async function syncFromNeon() {
     const clientKey = getClientKey();
@@ -391,7 +392,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     const next = [trimmed, ...recentSearches.filter((item) => item !== trimmed)].slice(0, 6);
     setRecentSearches(next);
     writeJson(storageKeys.recentSearches, next);
-    void saveSearchHistory(trimmed, filtered.length);
+    void saveSearchHistory(trimmed, visibleRows.length + semPmc.length);
   }
 
   async function submitAuth(event: React.FormEvent<HTMLFormElement>) {
@@ -650,7 +651,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
 
       <section className="summary-strip">
         <div>
-          <strong>{filtered.length.toLocaleString("pt-BR")}</strong>
+          <strong>{(visibleRows.length + semPmc.length).toLocaleString("pt-BR")}</strong>
           <span>{hasSearch || onlyFavorites ? "apresentações encontradas" : "digite para buscar"}</span>
         </div>
         <div>
@@ -775,6 +776,44 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
           </div>
         ) : null}
       </section>
+
+      {semPmc.length > 0 ? (
+        <section className="pf-section" aria-label="Apresentações sem preço máximo ao consumidor">
+          <div className="pf-header">
+            <h2>Sem preço máximo ao consumidor</h2>
+            <p>
+              Uso restrito hospitalar. A CMED não fixa PMC para estes produtos; o valor abaixo é o{" "}
+              <strong>Preço Fábrica</strong>, que é o teto de venda para farmácias, hospitais e órgãos
+              públicos — <strong>não</strong> é o preço final ao consumidor, e o valor cobrado será maior.
+            </p>
+          </div>
+          <div className="medicine-list">
+            {semPmc.map((item) => {
+              const { valor } = precoAplicavel(item, selectedZone);
+              return (
+                <article className="medicine-row" key={item.id}>
+                  <div className="medicine-main">
+                    <div className="medicine-title">
+                      <h3>{item.name}</h3>
+                      <span className="pf-badge">Preço Fábrica</span>
+                    </div>
+                    <p>{item.activeIngredient}</p>
+                    <small>{item.presentation}</small>
+                  </div>
+                  <div className="medicine-meta">
+                    <span>{item.laboratory}</span>
+                    <small>GGREM {item.ggremCode ?? item.id}</small>
+                  </div>
+                  <div className="price-cell">
+                    <small>PF {uf} | ICMS {formatRate(selectedRate)}</small>
+                    <strong>{valor === null ? "Sem preço nesta faixa" : currency.format(valor)}</strong>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
 
       {showSettings ? (
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Configuração de ICMS por UF">

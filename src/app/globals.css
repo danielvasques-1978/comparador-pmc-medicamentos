@@ -900,3 +900,69 @@ h1 {
     padding-top: 10px;
   }
 }
+
+.pf-section {
+  margin-top: 24px;
+  border: 1px solid #e2b53d;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fffaf0;
+}
+
+.pf-header h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.pf-header p {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.pf-badge {
+  background: #e2b53d;
+  color: #3a2c05;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/*
+ * Rows in .pf-section reuse .medicine-row but have no favorite-button
+ * (only medicine-main, medicine-meta and price-cell). The base .medicine-row
+ * grid (here and in the two breakpoints above) reserves its first track for
+ * that button, which would otherwise crush the medicine name into a ~42px
+ * column. These overrides give the three children their own column tracks.
+ */
+.pf-section .medicine-row {
+  grid-template-columns: minmax(240px, 1.4fr) minmax(160px, 0.6fr) 150px;
+}
+
+@media (max-width: 980px) {
+  .pf-section .medicine-row {
+    grid-template-columns: minmax(0, 1fr) 136px;
+  }
+
+  .pf-section .medicine-meta {
+    grid-column: 1 / 2;
+  }
+
+  .pf-section .price-cell {
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+  }
+}
+
+@media (max-width: 720px) {
+  .pf-section .medicine-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pf-section .medicine-meta,
+  .pf-section .price-cell {
+    grid-column: 1 / 2;
+    grid-row: auto;
+  }
+}
