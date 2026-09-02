@@ -617,8 +617,11 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
 
       <section className="summary-strip">
         <div>
-          <strong>{(visibleRows.length + semPmc.length).toLocaleString("pt-BR")}</strong>
-          <span>{hasSearch || onlyFavorites ? "apresentações encontradas" : "digite para buscar"}</span>
+          {/* O número depois dos filtros locais e antes do corte de exibição: é o
+              que o usuário obteria rolando a página. "Encontradas" fica só com o
+              aviso de truncamento, que fala do conjunto inteiro. */}
+          <strong>{filtered.length.toLocaleString("pt-BR")}</strong>
+          <span>{hasSearch || onlyFavorites ? "apresentações após os filtros" : "digite para buscar"}</span>
         </div>
         <div>
           <strong>{uf}</strong>
