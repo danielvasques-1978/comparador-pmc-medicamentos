@@ -1,41 +1,13 @@
-import { NextResponse } from "next/server.js";
+import { NextResponse } from "next/server";
 
 import criticalMedicines from "@/data/critical-medicines.json";
 import { buscar, construirTokensEstritos } from "@/lib/busca";
 import { getMedicinesCached } from "@/lib/medicines";
-import { temPmc } from "@/lib/precos";
-import type { Medicine } from "@/lib/types";
+import { montarResposta } from "@/lib/resposta-busca";
 
-export const LIMITE_POR_GRUPO = 1000;
 const MINIMO_DE_LETRAS = 2;
 
 const estritos = construirTokensEstritos(criticalMedicines);
-
-export type RespostaBusca = {
-  comPmc: Medicine[];
-  semPmc: Medicine[];
-  totalComPmc: number;
-  totalSemPmc: number;
-  truncado: boolean;
-  laboratorios: string[];
-};
-
-export function montarResposta(encontrados: Medicine[]): RespostaBusca {
-  const comPmc = encontrados.filter(temPmc);
-  const semPmc = encontrados.filter((item) => !temPmc(item));
-  const laboratorios = Array.from(new Set(encontrados.map((item) => item.laboratory))).sort((a, b) =>
-    a.localeCompare(b, "pt-BR"),
-  );
-
-  return {
-    comPmc: comPmc.slice(0, LIMITE_POR_GRUPO),
-    semPmc: semPmc.slice(0, LIMITE_POR_GRUPO),
-    totalComPmc: comPmc.length,
-    totalSemPmc: semPmc.length,
-    truncado: comPmc.length > LIMITE_POR_GRUPO || semPmc.length > LIMITE_POR_GRUPO,
-    laboratorios,
-  };
-}
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;

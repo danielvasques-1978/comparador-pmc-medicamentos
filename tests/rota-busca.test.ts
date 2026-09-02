@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { LIMITE_POR_GRUPO, montarResposta } from "../src/app/api/medicines/search/route.ts";
+import { LIMITE_POR_GRUPO, montarResposta } from "../src/lib/resposta-busca.ts";
 
 function med(id: string, comPmc: boolean, laboratory = "ACME") {
   return {
