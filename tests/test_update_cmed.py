@@ -5,6 +5,34 @@ import sys
 import scripts.update_cmed as update_cmed
 from scripts.update_cmed import decide
 
+# Same as tests/conftest.py's BASE_COLUMNS, minus the eight "PF *" headers —
+# used to build a spreadsheet that reproduces a CMED edition missing the
+# Preço Fábrica column group entirely.
+COLUMNS_SEM_PF = [
+    "SUBSTÂNCIA",
+    "CNPJ",
+    "LABORATÓRIO",
+    "CÓDIGO GGREM",
+    "REGISTRO",
+    "EAN 1",
+    "EAN 2",
+    "EAN 3",
+    "PRODUTO",
+    "APRESENTAÇÃO",
+    "CLASSE TERAPÊUTICA",
+    "TIPO DE PRODUTO (STATUS DO PRODUTO)",
+    "PMC 17 %",
+    "PMC 18 %",
+    "PMC 19 %",
+    "PMC 19,5 %",
+    "PMC 20 %",
+    "PMC 20,5 %",
+    "PMC 22,5 %",
+    "PMC 23 %",
+    "RESTRIÇÃO HOSPITALAR",
+    "TARJA",
+]
+
 
 def test_nao_faz_nada_quando_a_edicao_e_a_mesma():
     assert decide("11/08/2026", "11/08/2026") is False
@@ -18,6 +46,101 @@ def test_sai_com_2_quando_faltam_colunas_de_pf(monkeypatch, tmp_path):
     assert update_cmed.exit_code_for(applied=True, pf_columns_missing=True) == 2
     assert update_cmed.exit_code_for(applied=True, pf_columns_missing=False) == 0
     assert update_cmed.exit_code_for(applied=False, pf_columns_missing=True) == 1
+
+
+def test_main_publica_e_sai_com_2_quando_faltam_colunas_de_pf(
+    tmp_path, monkeypatch, build_cmed_workbook
+):
+    """Guarda de ponta a ponta para a trilha inteira que esta task protege:
+    ler as colunas da planilha candidata, calcular pf_columns_missing e
+    levar isso ate o codigo de saida de main() — nao so a funcao pura
+    exit_code_for isolada. Roda a planilha sem nenhuma das oito colunas de
+    PF e confirma as tres consequencias juntas: o codigo de saida e 2, a
+    base em CURRENT_JSON (um caminho temporario, nunca o arquivo real) foi
+    de fato escrita — provando que a publicacao aconteceu, e nao foi
+    pulada —, e o conteudo escrito contem a apresentacao com PMC da
+    planilha."""
+    xlsx_path = build_cmed_workbook(
+        [
+            {
+                "SUBSTÂNCIA": "CLONAZEPAM",
+                "LABORATÓRIO": "ACME S.A.",
+                "CÓDIGO GGREM": "999",
+                "EAN 1": "7898636192182",
+                "PRODUTO": "RIVOTRIL",
+                "APRESENTAÇÃO": "2 MG",
+                "PMC 18 %": "50,28",
+                "COMERCIALIZAÇÃO 2025": "Sim",
+            }
+        ],
+        published="01/09/2026",
+        columns=COLUMNS_SEM_PF,
+    )
+
+    current_json = tmp_path / "medicines.json"
+    current_json.write_text("[]", encoding="utf-8")
+
+    monkeypatch.setattr(update_cmed, "CURRENT_JSON", current_json)
+    monkeypatch.setattr(
+        update_cmed, "run_critical", lambda path: {"ok": 1, "absent": [], "invalid": []}
+    )
+    monkeypatch.setattr(sys, "argv", ["update_cmed.py", "--xlsx", str(xlsx_path), "--skip-neon"])
+
+    exit_code = update_cmed.main()
+
+    # 1. código de saída 2
+    assert exit_code == 2
+
+    # 2. a base foi escrita de verdade (publicação aconteceu)
+    written = json.loads(current_json.read_text(encoding="utf-8"))
+    assert written != []
+
+    # 3. a base escrita contém a apresentação com PMC da planilha
+    assert {item["id"] for item in written} == {"999"}
+    assert written[0]["pmc"]["18"] == 50.28
+
+
+def test_main_nao_sai_com_2_quando_as_colunas_de_pf_estao_presentes(
+    tmp_path, monkeypatch, build_cmed_workbook
+):
+    """Espelho do teste acima: com as oito colunas de PF presentes na
+    planilha — mesmo quando a única linha não tem PMC, só PF —,
+    pf_columns_missing precisa ser False de ponta a ponta e main() não
+    deve devolver 2. Sem este teste, o anterior por si só provaria apenas
+    que o código de saída 2 é possível, não que ele só dispara quando
+    deveria."""
+    xlsx_path = build_cmed_workbook(
+        [
+            {
+                "SUBSTÂNCIA": "LECANEMABE",
+                "LABORATÓRIO": "ACME S.A.",
+                "CÓDIGO GGREM": "888",
+                "EAN 1": "7898937460614",
+                "PRODUTO": "LEQEMBI",
+                "APRESENTAÇÃO": "100 MG/ML SOL DIL INFUS IV CT FA VD TRANS X 2 ML",
+                "RESTRIÇÃO HOSPITALAR": "Sim",
+                "PF 18 %": "1582,23",
+                "COMERCIALIZAÇÃO 2025": "Não",
+            }
+        ],
+        published="01/09/2026",
+    )
+
+    current_json = tmp_path / "medicines.json"
+    current_json.write_text("[]", encoding="utf-8")
+
+    monkeypatch.setattr(update_cmed, "CURRENT_JSON", current_json)
+    monkeypatch.setattr(
+        update_cmed, "run_critical", lambda path: {"ok": 1, "absent": [], "invalid": []}
+    )
+    monkeypatch.setattr(sys, "argv", ["update_cmed.py", "--xlsx", str(xlsx_path), "--skip-neon"])
+
+    exit_code = update_cmed.main()
+
+    assert exit_code == 0
+
+    written = json.loads(current_json.read_text(encoding="utf-8"))
+    assert {item["id"] for item in written} == {"888"}
 
 
 def test_age_quando_ha_edicao_mais_recente():

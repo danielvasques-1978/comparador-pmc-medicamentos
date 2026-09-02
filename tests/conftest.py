@@ -47,6 +47,7 @@ def build_cmed_workbook(tmp_path: Path):
         commercialization_header: str = "COMERCIALIZAÇÃO 2025",
         published: str = "11/08/2026",
         name: str = "cmed.xlsx",
+        columns: list[str] | None = None,
     ) -> Path:
         workbook = Workbook()
         sheet = workbook.active
@@ -56,7 +57,7 @@ def build_cmed_workbook(tmp_path: Path):
         sheet.append([f"Publicada em {published} 19h30min."])
         sheet.append([])
 
-        headers = [*BASE_COLUMNS, commercialization_header]
+        headers = [*(columns if columns is not None else BASE_COLUMNS), commercialization_header]
         sheet.append(headers)
         for row in rows:
             sheet.append([row.get(header) for header in headers])
