@@ -105,6 +105,8 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
   const [authMessage, setAuthMessage] = useState("");
   const [resposta, setResposta] = useState<RespostaBusca | null>(null);
   const [buscando, setBuscando] = useState(false);
+  const [erro, setErro] = useState(false);
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     setFavorites(readJson<string[]>(storageKeys.favorites, []));
@@ -150,20 +152,22 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
     const consulta = query.trim();
     if (consulta.length < 2 && !onlyFavorites) {
       setResposta(null);
+      setErro(false);
       return;
     }
 
     const controlador = new AbortController();
     const timer = setTimeout(() => {
       setBuscando(true);
+      setErro(false);
       const params = onlyFavorites && consulta.length < 2
         ? `ids=${encodeURIComponent(favorites.join(","))}`
         : `q=${encodeURIComponent(consulta)}`;
       fetch(`/api/medicines/search?${params}`, { signal: controlador.signal })
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error("falha"))))
         .then((dados) => setResposta(dados))
-        .catch((erro) => {
-          if (erro.name !== "AbortError") setResposta(null);
+        .catch((falha) => {
+          if (falha.name !== "AbortError") setErro(true);
         })
         .finally(() => setBuscando(false));
     }, 300);
@@ -172,7 +176,11 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
       clearTimeout(timer);
       controlador.abort();
     };
-  }, [favorites, onlyFavorites, query]);
+  }, [favorites, onlyFavorites, query, retryTick]);
+
+  function retryLastSearch() {
+    setRetryTick((tick) => tick + 1);
+  }
 
   const kindOptions = ["Todos", ...tipos];
   const formOptions = ["Todas", ...formas];
@@ -660,6 +668,15 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
           </div>
         </div>
 
+        {resposta?.truncado ? (
+          <div className="truncation-notice" role="status">
+            <p>
+              Esta busca encontrou {(resposta.totalComPmc + resposta.totalSemPmc).toLocaleString("pt-BR")}{" "}
+              apresentações, mais do que cabe numa consulta. Refine os termos para ver as demais.
+            </p>
+          </div>
+        ) : null}
+
         <div className="medicine-list">
           {visibleRows.map((item, index) => {
             const favorite = favorites.includes(item.id);
@@ -707,15 +724,31 @@ export function PmcComparator({ tipos, formas }: { tipos: string[]; formas: stri
         </div>
 
         {visibleRows.length === 0 ? (
-          <div className="empty-state">
-            <SlidersHorizontal size={34} />
-            <h3>{hasSearch || onlyFavorites ? "Nenhum resultado encontrado" : "Comece pela busca"}</h3>
-            <p>
-              {hasSearch || onlyFavorites
-                ? "Ajuste o termo, filtros ou seleção de favoritos."
-                : "A tabela compara somente resultados compatíveis com o termo digitado."}
-            </p>
-          </div>
+          erro ? (
+            <div className="empty-state">
+              <SlidersHorizontal size={34} />
+              <h3>Não foi possível buscar</h3>
+              <p>A consulta não chegou ao servidor. Verifique sua conexão e tente de novo.</p>
+              <button className="primary-button" type="button" onClick={retryLastSearch}>
+                <span>Tentar de novo</span>
+              </button>
+            </div>
+          ) : buscando && !resposta ? (
+            <div className="empty-state">
+              <SlidersHorizontal size={34} />
+              <p>Buscando…</p>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <SlidersHorizontal size={34} />
+              <h3>{hasSearch || onlyFavorites ? "Nenhum resultado encontrado" : "Comece pela busca"}</h3>
+              <p>
+                {hasSearch || onlyFavorites
+                  ? "Ajuste o termo, filtros ou seleção de favoritos."
+                  : "A tabela compara somente resultados compatíveis com o termo digitado."}
+              </p>
+            </div>
+          )
         ) : null}
       </section>
 

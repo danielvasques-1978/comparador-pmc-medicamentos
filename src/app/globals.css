@@ -347,6 +347,20 @@ h1 {
   padding: 8px 12px;
 }
 
+.truncation-notice {
+  background: #fff8e8;
+  border: 1px solid #f0d28f;
+  border-radius: 8px;
+  color: #4d3a12;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+}
+
+.truncation-notice p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 .medicine-list {
   display: grid;
   gap: 8px;
@@ -461,6 +475,10 @@ h1 {
 .empty-state h3 {
   color: var(--text);
   margin-top: 10px;
+}
+
+.empty-state .primary-button {
+  margin-top: 12px;
 }
 
 .modal-backdrop {
