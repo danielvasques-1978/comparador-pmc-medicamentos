@@ -611,15 +611,19 @@ import { precoAplicavel, temPmc } from "@/lib/precos";
 
 - [ ] **Step 2: Manter a lista principal homogênea**
 
-Dentro do `useMemo` de `filtered`, na função passada a `medicines.filter`, acrescente como primeira condição do corpo:
+O `useMemo` de `filtered` continua casando os dois grupos — é ele que carrega os critérios de busca, e duplicá-los depois seria repetir um bloco de lógica. A separação acontece uma linha adiante.
+
+Substitua `const visibleRows = filtered.slice(0, 250);` por:
 
 ```typescript
-      if (!temPmc(item)) return false;
+  const visibleRows = filtered.filter(temPmc).slice(0, 250);
 ```
+
+A Task 7 usa o mesmo `filtered` para extrair o outro grupo.
 
 - [ ] **Step 3: Corrigir o filtro de faixa de preço**
 
-No mesmo `filter`, substitua:
+No `filter`, substitua:
 
 ```typescript
       const price = item.pmc[selectedZone] ?? 0;
@@ -630,10 +634,10 @@ por:
 
 ```typescript
       const { valor } = precoAplicavel(item, selectedZone);
-      if (max !== null && Number.isFinite(max) && valor !== null && valor > max) return false;
+      if (max !== null && Number.isFinite(max) && temPmc(item) && valor !== null && valor > max) return false;
 ```
 
-Um item sem preço naquela zona deixa de ser tratado como custando zero — ele passa pelo filtro em vez de ser classificado como o mais barato.
+Duas mudanças aqui. Um item sem preço naquela zona deixa de ser tratado como custando zero — antes o `?? 0` o classificava como o mais barato de todos. E o teto de preço passa a valer apenas para o grupo com PMC: aplicá-lo a Preço Fábrica compararia um limite pensado para preço de consumidor contra preço de fábrica.
 
 - [ ] **Step 4: Corrigir a ordenação**
 
@@ -643,6 +647,8 @@ No `rows.sort`, substitua as duas linhas de `priceA`/`priceB` por:
       const priceA = precoAplicavel(a, selectedZone).valor ?? Number.POSITIVE_INFINITY;
       const priceB = precoAplicavel(b, selectedZone).valor ?? Number.POSITIVE_INFINITY;
 ```
+
+Note que `filtered` contém os dois grupos neste ponto, então a ordenação chega a comparar um PMC com um PF. Isso não é observável: a lista é dividida logo depois, e a ordem relativa dentro de cada grupo é a mesma que teria se cada um fosse ordenado isoladamente. Ordenar uma vez evita repetir o comparador em dois lugares, que divergiriam com o tempo.
 
 - [ ] **Step 5: Corrigir a célula de preço**
 
@@ -709,32 +715,17 @@ git commit -m "Stop assuming every presentation has a consumer price"
 - Modify: `src/components/pmc-comparator.tsx`
 - Modify: `src/app/globals.css`
 
-- [ ] **Step 1: Calcular o grupo sem PMC**
+- [ ] **Step 1: Extrair o grupo sem PMC**
 
-Logo após o `useMemo` de `filtered` e a linha `const visibleRows = filtered.slice(0, 250);`, acrescente um segundo `useMemo` que aplica os mesmos critérios de busca ao grupo sem PMC:
+O grupo sai do mesmo `filtered` que alimenta a lista principal, já com todos os critérios de busca aplicados. Nenhum critério é reescrito aqui.
+
+Logo após a linha `const visibleRows = filtered.filter(temPmc).slice(0, 250);`, acrescente:
 
 ```typescript
-  const semPmc = useMemo(() => {
-    const search = normalize(activeQuery);
-    if (!hasPaidAccess) return [];
-    if (!search && !onlyFavorites) return [];
-    const favoriteSet = new Set(favorites);
-
-    return medicines
-      .filter((item) => {
-        if (temPmc(item)) return false;
-        if (onlyFavorites && !favoriteSet.has(item.id)) return false;
-        if (kind !== "Todos" && item.kind !== kind) return false;
-        if (lab !== "Todos" && item.laboratory !== lab) return false;
-        if (form !== "Todas" && inferForm(item.presentation) !== form) return false;
-        return matchesSearch(item, search) || matchesRelatedIngredient(item, relatedIngredients);
-      })
-      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
-      .slice(0, 250);
-  }, [activeQuery, favorites, form, hasPaidAccess, kind, lab, medicines, onlyFavorites, relatedIngredients]);
+  const semPmc = filtered.filter((item) => !temPmc(item)).slice(0, 250);
 ```
 
-O filtro de faixa de preço não se aplica a este grupo: comparar um teto pensado para PMC contra PF misturaria as duas naturezas, que é exatamente o que este desenho evita.
+O teto de preço já foi tratado na Task 6: ele só se aplica ao grupo com PMC, então este grupo chega aqui sem ter sido filtrado por um limite pensado para outra natureza de preço.
 
 - [ ] **Step 2: Renderizar o bloco**
 
