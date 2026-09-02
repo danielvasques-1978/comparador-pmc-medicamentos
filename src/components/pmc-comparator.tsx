@@ -42,6 +42,17 @@ function formatRate(rate: string) {
   return `${rate.replace(".", ",")}%`;
 }
 
+const MENSAGEM_DE_REDE = "A consulta não chegou ao servidor. Verifique sua conexão e tente de novo.";
+
+// Distingue "o servidor respondeu com erro" de "a requisição não chegou lá":
+// só no primeiro caso existe uma mensagem do servidor para mostrar.
+class ErroDoServidor extends Error {
+  constructor(mensagem: string) {
+    super(mensagem);
+    this.name = "ErroDoServidor";
+  }
+}
+
 const storageKeys = {
   clientKey: "comparador-pmc:client-key",
   profileEmail: "comparador-pmc:profile-email",
@@ -115,7 +126,7 @@ export function PmcComparator({
   const [authMessage, setAuthMessage] = useState("");
   const [resposta, setResposta] = useState<RespostaBusca | null>(null);
   const [buscando, setBuscando] = useState(false);
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
@@ -163,22 +174,27 @@ export function PmcComparator({
     const consulta = query.trim();
     if (consulta.length < 2 && !onlyFavorites) {
       setResposta(null);
-      setErro(false);
+      setErro(null);
       return;
     }
 
     const controlador = new AbortController();
     const timer = setTimeout(() => {
       setBuscando(true);
-      setErro(false);
+      setErro(null);
       const params = onlyFavorites && consulta.length < 2
         ? `ids=${encodeURIComponent(favorites.join(","))}`
         : `q=${encodeURIComponent(consulta)}`;
       fetch(`/api/medicines/search?${params}`, { signal: controlador.signal })
-        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("falha"))))
+        .then(async (r) => {
+          if (r.ok) return r.json();
+          const corpo = (await r.json().catch(() => null)) as { erro?: string } | null;
+          throw new ErroDoServidor(corpo?.erro ?? "Não foi possível consultar a base.");
+        })
         .then((dados) => setResposta(dados))
-        .catch((falha) => {
-          if (falha.name !== "AbortError") setErro(true);
+        .catch((falha: Error) => {
+          if (falha.name === "AbortError") return;
+          setErro(falha instanceof ErroDoServidor ? falha.message : MENSAGEM_DE_REDE);
         })
         .finally(() => setBuscando(false));
     }, 300);
@@ -703,7 +719,7 @@ export function PmcComparator({
         {erro && temResultados ? (
           <div className="stale-notice" role="status">
             <p>
-              <strong>A última busca não chegou ao servidor.</strong> Os resultados abaixo são da consulta anterior.
+              <strong>A última busca falhou.</strong> {erro} Os resultados abaixo são da consulta anterior.
             </p>
             <button className="primary-button" type="button" onClick={retryLastSearch}>
               <span>Tentar de novo</span>
@@ -771,7 +787,7 @@ export function PmcComparator({
             <div className="empty-state">
               <SlidersHorizontal size={34} />
               <h3>Não foi possível buscar</h3>
-              <p>A consulta não chegou ao servidor. Verifique sua conexão e tente de novo.</p>
+              <p>{erro}</p>
               <button className="primary-button" type="button" onClick={retryLastSearch}>
                 <span>Tentar de novo</span>
               </button>
