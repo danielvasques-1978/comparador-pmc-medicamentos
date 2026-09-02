@@ -1,3 +1,5 @@
+import pytest
+
 from scripts.check_cmed import run_checks
 
 
@@ -158,8 +160,23 @@ def test_trava_hospitalar_quando_sem_pmc_nao_e_hospitalar():
     assert "SUSPEITO" in failures[0].detail
 
 
-def test_libera_quando_todas_sem_pmc_sao_hospitalares():
+def test_libera_quando_lista_hospitalar_esta_vazia():
+    # base_report() already carries pfSemHospitalar=[] alongside its other
+    # populated fields (volumeRatio, eanCoverage, etc.) — this proves an
+    # empty list doesn't trip the gate, not that "sem PMC" items are
+    # hospital-restricted (that's covered by the diff_cmed tests).
     assert run_checks(base_report(), VAZIO, VAZIO) == []
+
+
+def test_trava_hospitalar_estoura_se_o_relatorio_nao_traz_a_chave():
+    # pfSemHospitalar tolerates zero exceptions; if the report ever loses the
+    # key (a future diff_cmed refactor renaming/dropping it), the gate must
+    # fail loudly instead of silently passing, like every sibling gate does.
+    report = base_report()
+    del report["pfSemHospitalar"]
+
+    with pytest.raises(KeyError):
+        run_checks(report, VAZIO, VAZIO)
 
 
 def test_volume_shrink_handles_missing_record_keys_defensively():

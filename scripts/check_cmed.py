@@ -123,7 +123,7 @@ def _check_criticals(before: dict, after: dict) -> Failure | None:
 
 
 def _check_hospitalar(report: dict) -> Failure | None:
-    offenders = report.get("pfSemHospitalar", [])
+    offenders = report["pfSemHospitalar"]
     if len(offenders) <= MAX_PF_SEM_HOSPITALAR:
         return None
     nomes = "; ".join(f"{item.get('name', '')} ({item.get('presentation', '')})" for item in offenders[:10])
