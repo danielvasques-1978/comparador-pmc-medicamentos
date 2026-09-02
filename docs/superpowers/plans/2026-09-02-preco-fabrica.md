@@ -974,10 +974,13 @@ Em `.github/workflows/cmed-update.yml`, o passo `Atualizar a base` passa a captu
         run: |
           set +e
           python -m scripts.update_cmed
-          echo "code=$?" >> "$GITHUB_OUTPUT"
+          code=$?
           set -e
-          test "$(grep -oP '(?<=code=)\d+' "$GITHUB_OUTPUT" | tail -1)" != "1"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          test "$code" != "1"
 ```
+
+O código de saída é guardado numa variável antes de qualquer outro comando rodar — `$?` só é válido imediatamente após o comando que o produziu. O `test` no final falha o passo apenas no código 1, que é o de trava reprovada ou download quebrado; o código 2 passa daqui, para que a publicação aconteça, e é o passo do fim do workflow que o transforma em e-mail.
 
 O passo de commit permanece como está. Acrescente, **depois** dele, o passo que dispara o e-mail sem ter impedido a publicação:
 
