@@ -18,6 +18,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import criticalMedicines from "@/data/critical-medicines.json";
 import { defaultUfIcmsMap, icmsRates, isIcmsRate, ufCodes } from "@/lib/icms";
+import { precoAplicavel, temPmc } from "@/lib/precos";
 import type { IcmsRate, Medicine, UfCode, UfIcmsMap } from "@/lib/types";
 
 type SortMode = "group-lab" | "price-asc" | "price-desc" | "name";
@@ -251,15 +252,15 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
       if (kind !== "Todos" && item.kind !== kind) return false;
       if (lab !== "Todos" && item.laboratory !== lab) return false;
       if (form !== "Todas" && inferForm(item.presentation) !== form) return false;
-      const price = item.pmc[selectedZone] ?? 0;
-      if (max !== null && Number.isFinite(max) && price > max) return false;
+      const { valor } = precoAplicavel(item, selectedZone);
+      if (max !== null && Number.isFinite(max) && temPmc(item) && valor !== null && valor > max) return false;
       return matchesSearch(item, search) || matchesRelatedIngredient(item, relatedIngredients);
     });
 
     rows.sort((a, b) => {
       if (sortMode === "name") return a.name.localeCompare(b.name, "pt-BR");
-      const priceA = a.pmc[selectedZone] ?? Number.POSITIVE_INFINITY;
-      const priceB = b.pmc[selectedZone] ?? Number.POSITIVE_INFINITY;
+      const priceA = precoAplicavel(a, selectedZone).valor ?? Number.POSITIVE_INFINITY;
+      const priceB = precoAplicavel(b, selectedZone).valor ?? Number.POSITIVE_INFINITY;
       if (sortMode === "group-lab") {
         return (
           a.laboratory.localeCompare(b.laboratory, "pt-BR") ||
@@ -273,7 +274,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
     return rows;
   }, [activeQuery, favorites, form, hasPaidAccess, kind, lab, maxPrice, medicines, onlyFavorites, relatedIngredients, selectedZone, sortMode]);
 
-  const visibleRows = filtered.slice(0, 250);
+  const visibleRows = filtered.filter(temPmc).slice(0, 250);
 
   async function syncFromNeon() {
     const clientKey = getClientKey();
@@ -492,7 +493,8 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
       "Apresentacao",
       "UF",
       "ICMS UF",
-      "PMC",
+      "Tipo de preço",
+      "Valor",
     ];
     const lines = visibleRows.map((item) =>
       [
@@ -503,7 +505,8 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
         item.presentation,
         uf,
         formatRate(selectedRate),
-        String(item.pmc[selectedZone] ?? ""),
+        precoAplicavel(item, selectedZone).tipo,
+        String(precoAplicavel(item, selectedZone).valor ?? ""),
       ]
         .map((value) => `"${String(value).replaceAll('"', '""')}"`)
         .join(";"),
@@ -744,8 +747,15 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
                     <small>GGREM {item.ggremCode ?? item.id}</small>
                   </div>
                   <div className="price-cell">
-                  <small>PMC {uf} | ICMS {formatRate(selectedRate)}</small>
-                  <strong>{currency.format(item.pmc[selectedZone] ?? 0)}</strong>
+                  {(() => {
+                    const { valor, tipo } = precoAplicavel(item, selectedZone);
+                    return (
+                      <>
+                        <small>{tipo} {uf} | ICMS {formatRate(selectedRate)}</small>
+                        <strong>{valor === null ? "Sem preço nesta faixa" : currency.format(valor)}</strong>
+                      </>
+                    );
+                  })()}
                   </div>
                 </article>
               </div>
