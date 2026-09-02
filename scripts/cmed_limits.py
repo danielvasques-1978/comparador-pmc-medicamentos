@@ -9,3 +9,8 @@ VOLUME_MAX_RATIO = 0.50
 MAX_PRICE_VARIATION = 0.30
 MIN_EAN_COVERAGE = 0.90
 MAX_CRITICAL_LOSSES = 5
+
+# O aviso exibido para apresentações sem PMC afirma uso restrito hospitalar.
+# Zero exceções toleradas: se a CMED mudar esse padrão, a edição é barrada e a
+# redação do aviso é revista deliberadamente.
+MAX_PF_SEM_HOSPITALAR = 0

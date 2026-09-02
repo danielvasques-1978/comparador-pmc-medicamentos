@@ -8,6 +8,7 @@ from pathlib import Path
 
 from scripts.cmed_limits import (
     MAX_CRITICAL_LOSSES,
+    MAX_PF_SEM_HOSPITALAR,
     MAX_PRICE_VARIATION,
     MIN_EAN_COVERAGE,
     VOLUME_MAX_RATIO,
@@ -121,6 +122,18 @@ def _check_criticals(before: dict, after: dict) -> Failure | None:
     )
 
 
+def _check_hospitalar(report: dict) -> Failure | None:
+    offenders = report.get("pfSemHospitalar", [])
+    if len(offenders) <= MAX_PF_SEM_HOSPITALAR:
+        return None
+    nomes = "; ".join(f"{item.get('name', '')} ({item.get('presentation', '')})" for item in offenders[:10])
+    return Failure(
+        "hospitalar",
+        f"{len(offenders)} apresentação(ões) sem PMC não têm restrição hospitalar, "
+        f"o que contradiz o aviso exibido para esse grupo: {nomes}",
+    )
+
+
 def run_checks(report: dict, criticals_before: dict, criticals_after: dict) -> list[Failure]:
     candidates = [
         _check_edition(report),
@@ -128,6 +141,7 @@ def run_checks(report: dict, criticals_before: dict, criticals_after: dict) -> l
         _check_price(report),
         _check_ean(report),
         _check_criticals(criticals_before, criticals_after),
+        _check_hospitalar(report),
     ]
     return [failure for failure in candidates if failure is not None]
 

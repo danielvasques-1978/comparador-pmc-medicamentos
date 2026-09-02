@@ -55,3 +55,25 @@ def test_datas_das_edicoes():
 
     assert report["currentTableDate"] == "10/06/2026"
     assert report["candidateTableDate"] == "11/08/2026"
+
+
+def test_lista_sem_pmc_que_nao_e_hospitalar():
+    candidate = [
+        {"id": "a", "name": "OK", "presentation": "1 MG", "pmc": {}, "pf": {"18": 10.0},
+         "hospitalRestricted": True, "ean1": "789", "tableDate": "11/08/2026"},
+        {"id": "b", "name": "SUSPEITO", "presentation": "2 MG", "pmc": {}, "pf": {"18": 20.0},
+         "hospitalRestricted": False, "ean1": "789", "tableDate": "11/08/2026"},
+    ]
+
+    report = build_report([], candidate)
+
+    assert [item["id"] for item in report["pfSemHospitalar"]] == ["b"]
+
+
+def test_item_com_pmc_nunca_entra_na_lista_hospitalar():
+    candidate = [
+        {"id": "a", "name": "NORMAL", "presentation": "1 MG", "pmc": {"18": 10.0},
+         "hospitalRestricted": False, "ean1": "789", "tableDate": "11/08/2026"},
+    ]
+
+    assert build_report([], candidate)["pfSemHospitalar"] == []

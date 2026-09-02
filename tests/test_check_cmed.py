@@ -13,6 +13,7 @@ def base_report(**overrides):
         "left": [],
         "priceChanges": [],
         "maxPriceVariation": 0.05,
+        "pfSemHospitalar": [],
     }
     report.update(overrides)
     return report
@@ -146,6 +147,19 @@ def test_price_message_clarifies_sample_when_truncated():
     # or should explicitly state it's the count within the provided data sample
     # NOT just claim "70 variações" without clarification that data is pre-filtered
     assert "maiores" in detail.lower() or "amostra" in detail.lower() or "entre os" in detail.lower()
+
+
+def test_trava_hospitalar_quando_sem_pmc_nao_e_hospitalar():
+    report = base_report(pfSemHospitalar=[{"id": "b", "name": "SUSPEITO", "presentation": "2 MG"}])
+
+    failures = run_checks(report, VAZIO, VAZIO)
+
+    assert [failure.name for failure in failures] == ["hospitalar"]
+    assert "SUSPEITO" in failures[0].detail
+
+
+def test_libera_quando_todas_sem_pmc_sao_hospitalares():
+    assert run_checks(base_report(), VAZIO, VAZIO) == []
 
 
 def test_volume_shrink_handles_missing_record_keys_defensively():

@@ -53,6 +53,15 @@ def build_report(current: list[dict], candidate: list[dict]) -> dict:
     changes.sort(key=lambda item: abs(item["variation"]), reverse=True)
     with_ean = sum(1 for item in candidate if item.get("ean1"))
 
+    sem_hospitalar = [
+        _identify(item)
+        for item in candidate
+        if not any(
+            value is not None for value in (item.get("pmc") or {}).values()
+        )
+        and not item.get("hospitalRestricted")
+    ]
+
     return {
         "currentTableDate": _table_date(current),
         "candidateTableDate": _table_date(candidate),
@@ -64,6 +73,7 @@ def build_report(current: list[dict], candidate: list[dict]) -> dict:
         "left": left,
         "priceChanges": changes[:MAX_LISTED_CHANGES],
         "maxPriceVariation": abs(changes[0]["variation"]) if changes else 0.0,
+        "pfSemHospitalar": sem_hospitalar,
     }
 
 
