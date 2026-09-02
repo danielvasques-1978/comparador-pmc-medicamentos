@@ -869,6 +869,136 @@ git commit -m "Document the factory price group and its regeneration step"
 
 ---
 
+### Task 9: Avisar quando as colunas de PF desaparecerem
+
+O importador tolera a ausência das colunas de Preço Fábrica e segue publicando só o que tem PMC — decisão do dono do projeto. Mas essa tolerância não pode ser silenciosa: é ela que faria o grupo hospitalar sumir do site sem ninguém notar. Esta task garante o aviso por e-mail **sem** impedir a publicação.
+
+Neste sistema o e-mail só chega quando o job do GitHub falha. A ordem é, portanto: publicar primeiro, avisar depois.
+
+**Files:**
+- Modify: `scripts/import_cmed_xlsx.py`
+- Modify: `scripts/diff_cmed.py`
+- Modify: `scripts/update_cmed.py`
+- Modify: `.github/workflows/cmed-update.yml`
+- Test: `tests/test_import_cmed.py`, `tests/test_update_cmed.py`
+
+**Interfaces:**
+- Produces: `pf_columns_present(columns: dict[str, int]) -> bool` em `scripts/import_cmed_xlsx.py` — falso quando nenhuma das oito colunas de PF existe na planilha.
+- Produces: o relatório ganha `pfColumnsMissing: bool`.
+- Produces: `update_cmed.py` sai com código **2** quando aplicou a edição mas as colunas de PF estavam ausentes. Zero continua significando sucesso limpo, 1 continua significando "trava barrou ou download falhou".
+
+- [ ] **Step 1: Escrever os testes que falham**
+
+Em `tests/test_import_cmed.py`:
+
+```python
+def test_detecta_ausencia_das_colunas_de_pf(build_cmed_workbook):
+    from scripts.import_cmed_xlsx import PF_COLUMNS, pf_columns_present
+
+    presentes = {nome: i for i, nome in enumerate(PF_COLUMNS.values())}
+    assert pf_columns_present(presentes) is True
+    assert pf_columns_present({"PMC 18 %": 0}) is False
+    assert pf_columns_present({"PF 18 %": 0}) is True
+```
+
+Em `tests/test_update_cmed.py`:
+
+```python
+def test_sai_com_2_quando_faltam_colunas_de_pf(monkeypatch, tmp_path):
+    from scripts import update_cmed
+
+    monkeypatch.setattr(update_cmed, "CURRENT_JSON", tmp_path / "base.json")
+    update_cmed.CURRENT_JSON.write_text("[]", encoding="utf-8")
+    assert update_cmed.exit_code_for(applied=True, pf_columns_missing=True) == 2
+    assert update_cmed.exit_code_for(applied=True, pf_columns_missing=False) == 0
+    assert update_cmed.exit_code_for(applied=False, pf_columns_missing=True) == 1
+```
+
+- [ ] **Step 2: Rodar para confirmar que falham**
+
+```bash
+pytest tests/test_import_cmed.py tests/test_update_cmed.py -v
+```
+
+Esperado: FAIL por `ImportError` em `pf_columns_present` e `exit_code_for`.
+
+- [ ] **Step 3: Implementar a detecção**
+
+Em `scripts/import_cmed_xlsx.py`, após `PF_COLUMNS`:
+
+```python
+def pf_columns_present(columns: dict[str, int]) -> bool:
+    return any(column in columns for column in PF_COLUMNS.values())
+```
+
+Em `scripts/diff_cmed.py`, `build_report` ganha um parâmetro com padrão para não quebrar quem já a chama:
+
+```python
+def build_report(current: list[dict], candidate: list[dict], pf_columns_missing: bool = False) -> dict:
+```
+
+e a chave no dicionário devolvido:
+
+```python
+        "pfColumnsMissing": pf_columns_missing,
+```
+
+Em `scripts/update_cmed.py`, acrescente a função pura e use-a no lugar dos `return` literais:
+
+```python
+def exit_code_for(*, applied: bool, pf_columns_missing: bool) -> int:
+    if not applied:
+        return 1
+    return 2 if pf_columns_missing else 0
+```
+
+O orquestrador passa `pf_columns_missing` a `build_report` e, no caminho de sucesso, devolve `exit_code_for(...)` em vez de `0`. Quando o código for 2, imprima em stderr: `"Edição aplicada, mas a planilha não trouxe colunas de Preço Fábrica: o grupo de uso restrito hospitalar não foi importado."`
+
+- [ ] **Step 4: Ensinar o workflow a distinguir os três códigos**
+
+Em `.github/workflows/cmed-update.yml`, o passo `Atualizar a base` passa a capturar o código e registrá-lo, sem falhar de imediato:
+
+```yaml
+      - name: Atualizar a base
+        id: update
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set +e
+          python -m scripts.update_cmed
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+          test "$(grep -oP '(?<=code=)\d+' "$GITHUB_OUTPUT" | tail -1)" != "1"
+```
+
+O passo de commit permanece como está. Acrescente, **depois** dele, o passo que dispara o e-mail sem ter impedido a publicação:
+
+```yaml
+      - name: Avisar se faltaram colunas de Preço Fábrica
+        if: steps.update.outputs.code == '2'
+        run: |
+          echo "A edição foi publicada, mas a planilha da CMED não trouxe colunas de Preço Fábrica."
+          echo "O grupo de uso restrito hospitalar não entrou nesta edição."
+          exit 1
+```
+
+- [ ] **Step 5: Rodar os testes**
+
+```bash
+pytest -v
+```
+
+Esperado: todos passam.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add scripts/import_cmed_xlsx.py scripts/diff_cmed.py scripts/update_cmed.py .github/workflows/cmed-update.yml tests/test_import_cmed.py tests/test_update_cmed.py
+git commit -m "Warn by email when the factory price columns disappear"
+```
+
+---
+
 ## Notas de execução
 
 - As Tasks 1, 2 e 4 não tocam no banco nem na aplicação e rodam sem `DATABASE_URL`.
