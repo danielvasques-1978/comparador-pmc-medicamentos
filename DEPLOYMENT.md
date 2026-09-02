@@ -36,7 +36,11 @@ Os scripts leem `DATABASE_URL` de `.env.local`. Se o arquivo estiver dentro de `
 
 Um workflow do GitHub Actions (`.github/workflows/cmed-update.yml`) roda `npm run update:cmed` diariamente. Quando sai uma edição nova da CMED e ela passa nas travas de sanidade, o workflow publica sozinho: atualiza `src/data/medicines.json`, comita como `github-actions[bot]` e empurra para `main`, o que dispara o deploy na Vercel.
 
-Quando uma trava reprova a edição, o passo de atualização falha, o passo de commit não roda, o GitHub Actions envia e-mail de falha, e nada é publicado. Os limites de cada trava (variação de volume, variação de preço, cobertura de EAN, perdas de medicamentos críticos) vivem em `scripts/cmed_limits.py`. Não existe publicação forçada: não há flag, variável de ambiente ou override que contorne uma trava reprovada — ajustar o limite no código é o único caminho previsto.
+Quando uma trava reprova a edição, o passo de atualização falha, o passo de commit não roda, o GitHub Actions envia e-mail de falha, e nada é publicado. Os limites de cada trava (variação de volume, variação de preço, cobertura de EAN, perdas de medicamentos críticos, apresentações sem PMC sem restrição hospitalar) vivem em `scripts/cmed_limits.py`. Não existe publicação forçada: não há flag, variável de ambiente ou override que contorne uma trava reprovada — ajustar o limite no código é o único caminho previsto.
+
+A trava `hospitalar` reprova a edição quando alguma apresentação sem PMC não tem `RESTRIÇÃO HOSPITALAR = Sim`, porque o aviso exibido ao usuário na seção "Sem preço máximo ao consumidor" afirma uso hospitalar para todo o grupo. O limite tolera zero exceções.
+
+Publicar o código não faz esse grupo aparecer no site: a base só passa a contê-lo quando for regerada, seja pela próxima edição da CMED que o cron importa sozinho, seja rodando `npm run update:cmed -- --force` deliberadamente. Entre o deploy e essa regeração, o site continua sem exibir a seção de apresentações sem PMC.
 
 No app publicado, abra `/admin` para conferir:
 

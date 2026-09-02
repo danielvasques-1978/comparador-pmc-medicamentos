@@ -1,6 +1,6 @@
 # Comparador PMC Medicamentos
 
-Aplicação Next.js para comparar PMC de apresentações de medicamentos por UF/ICMS, usando a planilha oficial da CMED/Anvisa.
+Aplicação Next.js para comparar PMC de apresentações de medicamentos por UF/ICMS, usando a planilha oficial da CMED/Anvisa. Apresentações de uso restrito hospitalar, para as quais a CMED não fixa PMC, aparecem em um bloco separado com o Preço Fábrica e um aviso de que não é o preço ao consumidor.
 
 ## Rotas
 
@@ -24,7 +24,7 @@ npm run validate:critical
 npm run build
 ```
 
-`update:cmed` é o caminho normal: baixa a edição mais recente da CMED, roda as cinco travas de sanidade e só publica (`src/data/medicines.json` e Neon) se todas passarem. Não existe publicação forçada.
+`update:cmed` é o caminho normal: baixa a edição mais recente da CMED, roda as seis travas de sanidade e só publica (`src/data/medicines.json` e Neon) se todas passarem. Não existe publicação forçada.
 
 Dois comandos adicionais existem para uso manual e **não passam por nenhuma trava**:
 
