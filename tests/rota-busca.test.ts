@@ -25,11 +25,42 @@ test("separa os dois grupos", () => {
   assert.deepEqual(r.semPmc.map((i) => i.id), ["b"]);
 });
 
-test("conta antes de truncar e sinaliza o truncamento", () => {
-  const muitos = Array.from({ length: LIMITE_POR_GRUPO + 5 }, (_, i) => med(`x${i}`, true));
+test("trunca o grupo com PMC estourando sozinho, contando antes de cortar", () => {
+  const muitos = [
+    ...Array.from({ length: LIMITE_POR_GRUPO + 5 }, (_, i) => med(`x${i}`, true)),
+    med("semPmc", false),
+  ];
   const r = montarResposta(muitos);
   assert.equal(r.totalComPmc, LIMITE_POR_GRUPO + 5);
   assert.equal(r.comPmc.length, LIMITE_POR_GRUPO);
+  assert.equal(r.totalSemPmc, 1);
+  assert.equal(r.semPmc.length, 1);
+  assert.equal(r.truncado, true);
+});
+
+test("trunca o grupo sem PMC estourando sozinho", () => {
+  const muitos = [
+    med("comPmc", true),
+    ...Array.from({ length: LIMITE_POR_GRUPO + 5 }, (_, i) => med(`y${i}`, false)),
+  ];
+  const r = montarResposta(muitos);
+  assert.equal(r.totalComPmc, 1);
+  assert.equal(r.comPmc.length, 1);
+  assert.equal(r.totalSemPmc, LIMITE_POR_GRUPO + 5);
+  assert.equal(r.semPmc.length, LIMITE_POR_GRUPO);
+  assert.equal(r.truncado, true);
+});
+
+test("trunca os dois grupos quando os dois estouram", () => {
+  const muitos = [
+    ...Array.from({ length: LIMITE_POR_GRUPO + 5 }, (_, i) => med(`x${i}`, true)),
+    ...Array.from({ length: LIMITE_POR_GRUPO + 7 }, (_, i) => med(`y${i}`, false)),
+  ];
+  const r = montarResposta(muitos);
+  assert.equal(r.totalComPmc, LIMITE_POR_GRUPO + 5);
+  assert.equal(r.totalSemPmc, LIMITE_POR_GRUPO + 7);
+  assert.equal(r.comPmc.length, LIMITE_POR_GRUPO);
+  assert.equal(r.semPmc.length, LIMITE_POR_GRUPO);
   assert.equal(r.truncado, true);
 });
 
