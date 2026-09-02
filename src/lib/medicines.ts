@@ -11,6 +11,7 @@ type MedicineRow = {
   product_type: string | null;
   presentation: string;
   pmc: Record<IcmsZone, number>;
+  pf: Record<IcmsZone, number> | null;
   ggrem_code: string | null;
   registration: string | null;
   commercialized: boolean | null;
@@ -40,6 +41,7 @@ export async function getMedicines() {
         product_type,
         presentation,
         pmc,
+        pf,
         ggrem_code,
         registration,
         commercialized,
@@ -68,6 +70,7 @@ export async function getMedicines() {
       productType: row.product_type ?? row.kind,
       presentation: row.presentation,
       pmc: row.pmc,
+      pf: row.pf ?? undefined,
       ggremCode: row.ggrem_code ?? row.id,
       registration: row.registration ?? undefined,
       commercialized: row.commercialized ?? undefined,
