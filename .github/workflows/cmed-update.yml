@@ -40,7 +40,7 @@ jobs:
           code=$?
           set -e
           echo "code=$code" >> "$GITHUB_OUTPUT"
-          test "$code" != "1"
+          case "$code" in 0|2) ;; *) exit 1;; esac
 
       - name: Commitar a edição nova
         run: |
