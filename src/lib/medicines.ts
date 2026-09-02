@@ -1,6 +1,6 @@
 import fallbackMedicines from "@/data/medicines.json";
 import { getSql } from "@/lib/neon";
-import type { IcmsZone, Medicine } from "@/lib/types";
+import type { Medicine } from "@/lib/types";
 
 type MedicineRow = {
   id: string;
@@ -10,8 +10,8 @@ type MedicineRow = {
   kind: Medicine["kind"];
   product_type: string | null;
   presentation: string;
-  pmc: Record<IcmsZone, number>;
-  pf: Record<IcmsZone, number> | null;
+  pmc: Medicine["pmc"];
+  pf: Medicine["pf"] | null;
   ggrem_code: string | null;
   registration: string | null;
   commercialized: boolean | null;
