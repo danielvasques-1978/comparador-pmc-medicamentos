@@ -50,7 +50,7 @@ No banco entra uma coluna `pf jsonb`, alimentada pelo seed do mesmo modo que `pm
 
 ## Separação em um único lugar
 
-A distinção entre os dois grupos é feita por um predicado único, exportado de `src/lib/medicines.ts`:
+A distinção entre os dois grupos é feita por um predicado único, exportado de um arquivo novo, `src/lib/precos.ts`, que não importa nada em tempo de execução — apenas tipos. Essa restrição é deliberada: `src/lib/medicines.ts` importa aliases `@/` e o JSON da base, que o test runner do Node não resolve, e o projeto não tem como testar componentes React. Um arquivo puro é o que torna esta lógica — a mais perigosa da feature — verificável por teste automatizado.
 
 ```
 temPmc(item) -> boolean
