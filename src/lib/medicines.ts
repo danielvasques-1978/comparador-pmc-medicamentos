@@ -88,3 +88,25 @@ export async function getMedicines() {
     return fallbackMedicines as Medicine[];
   }
 }
+
+const CACHE_MS = 15 * 60 * 1000;
+
+let cache: { at: number; medicines: Medicine[] } | null = null;
+let emVoo: Promise<Medicine[]> | null = null;
+
+export async function getMedicinesCached() {
+  if (cache && Date.now() - cache.at < CACHE_MS) return cache.medicines;
+  // Sem esta guarda, várias requisições simultâneas numa instância fria
+  // disparariam a mesma consulta ao banco em paralelo.
+  if (!emVoo) {
+    emVoo = getMedicines()
+      .then((medicines) => {
+        cache = { at: Date.now(), medicines };
+        return medicines;
+      })
+      .finally(() => {
+        emVoo = null;
+      });
+  }
+  return emVoo;
+}
