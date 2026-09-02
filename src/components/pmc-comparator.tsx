@@ -16,10 +16,13 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { buscar, construirTokensEstritos, normalize, tokensMatchText } from "@/lib/busca";
 import criticalMedicines from "@/data/critical-medicines.json";
 import { defaultUfIcmsMap, icmsRates, isIcmsRate, ufCodes } from "@/lib/icms";
 import { precoAplicavel, temPmc } from "@/lib/precos";
 import type { IcmsRate, Medicine, UfCode, UfIcmsMap } from "@/lib/types";
+
+const strictSearchTokens = construirTokensEstritos(criticalMedicines);
 
 type SortMode = "group-lab" | "price-asc" | "price-desc" | "name";
 type AuthPayload = {
@@ -49,45 +52,9 @@ const storageKeys = {
   recentSearches: "comparador-pmc:recent-searches",
 };
 
-const strictSearchTokens = new Set(
-  criticalMedicines.flatMap((item) => [item.query, ...item.allowed].flatMap((value) => textTokens(value))),
-);
-
-function normalize(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function textTokens(value: string) {
-  return normalize(value)
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-}
-
-function queryTokens(search: string) {
-  return textTokens(search).filter((token) => token.length >= 3);
-}
-
-function tokenMatchesText(queryToken: string, textToken: string) {
-  if (strictSearchTokens.has(queryToken)) return textToken === queryToken;
-  return textToken.startsWith(queryToken);
-}
-
-function tokensMatchText(search: string, text: string) {
-  const searchTokens = queryTokens(search);
-  if (searchTokens.length === 0) return false;
-  const searchableTokens = textTokens(text);
-  return searchTokens.every((queryToken) =>
-    searchableTokens.some((textToken) => tokenMatchesText(queryToken, textToken)),
-  );
-}
-
 function matchesSearch(item: Medicine, search: string) {
   if (!search) return true;
-  return tokensMatchText(search, `${item.name} ${item.activeIngredient}`);
+  return tokensMatchText(search, `${item.name} ${item.activeIngredient}`, strictSearchTokens);
 }
 
 function matchesRelatedIngredient(item: Medicine, relatedIngredients: Set<string>) {
@@ -205,7 +172,10 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
 
     const ingredients = new Set<string>();
     medicines.forEach((item) => {
-      if (tokensMatchText(search, item.name) || tokensMatchText(search, item.activeIngredient)) {
+      if (
+        tokensMatchText(search, item.name, strictSearchTokens) ||
+        tokensMatchText(search, item.activeIngredient, strictSearchTokens)
+      ) {
         ingredients.add(normalize(item.activeIngredient));
       }
     });
