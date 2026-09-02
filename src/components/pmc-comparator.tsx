@@ -497,7 +497,7 @@ export function PmcComparator({ medicines }: { medicines: Medicine[] }) {
       "Tipo de preço",
       "Valor",
     ];
-    const lines = visibleRows.map((item) =>
+    const lines = [...visibleRows, ...semPmc].map((item) =>
       [
         item.name,
         item.activeIngredient,
