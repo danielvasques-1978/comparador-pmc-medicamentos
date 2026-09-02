@@ -805,7 +805,15 @@ Em `src/app/globals.css`, ao final do arquivo:
 }
 ```
 
-- [ ] **Step 4: Verificar que compila**
+- [ ] **Step 4: Acertar o contador de resultados**
+
+A Task 6 deixou uma inconsistência de propósito, para não fazer e desfazer: o resumo acima da lista mostra `{filtered.length}` seguido de "apresentações encontradas", mas a lista principal passou a exibir só as com PMC. Enquanto o segundo grupo não era renderizado, o número prometia mais linhas do que apareciam.
+
+Com o bloco desta task no ar, os dois grupos estão visíveis e `filtered.length` volta a descrever a realidade — mas só se ambos couberem na tela. Como cada lista corta em 250, confirme por leitura que o número exibido corresponde à soma do que o usuário efetivamente vê, e ajuste-o se não corresponder. O mesmo vale para o valor passado a `saveSearchHistory`.
+
+Registre no relatório qual das duas situações encontrou e o que fez.
+
+- [ ] **Step 5: Verificar que compila**
 
 ```bash
 npx tsc --noEmit
@@ -819,7 +827,7 @@ npm run lint
 
 Esperado: limpo.
 
-- [ ] **Step 5: Ver funcionando de verdade**
+- [ ] **Step 6: Ver funcionando de verdade**
 
 Gere uma base que contenha o grupo, sem tocar na publicada:
 
@@ -835,7 +843,7 @@ Ao terminar, **desfaça a base gerada** — ela pertence ao pipeline, não a est
 git checkout -- src/data/medicines.json
 ```
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/components/pmc-comparator.tsx src/app/globals.css
@@ -990,7 +998,7 @@ pytest -v
 
 Esperado: todos passam.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add scripts/import_cmed_xlsx.py scripts/diff_cmed.py scripts/update_cmed.py .github/workflows/cmed-update.yml tests/test_import_cmed.py tests/test_update_cmed.py
