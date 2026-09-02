@@ -3,9 +3,9 @@ import test from "node:test";
 
 import { precoAplicavel, temPmc } from "../src/lib/precos.ts";
 
-const comPmc = { pmc: { "18": 50.28 } } as never;
-const semPmc = { pmc: {}, pf: { "18": 1582.23 } } as never;
-const pmcVazio = { pmc: { "18": null } } as never;
+const comPmc = { pmc: { "18": 50.28 } };
+const semPmc = { pmc: {}, pf: { "18": 1582.23 } };
+const pmcVazio = { pmc: { "18": null } };
 
 test("reconhece item com PMC", () => {
   assert.equal(temPmc(comPmc), true);
@@ -29,4 +29,14 @@ test("preco aplicavel de item sem PMC vem do PF", () => {
 
 test("zona sem valor devolve null, nunca zero", () => {
   assert.deepEqual(precoAplicavel(semPmc, "23"), { valor: null, tipo: "PF" });
+});
+
+test("item com PMC mas sem valor na zona pedida devolve null, nao zero", () => {
+  assert.deepEqual(precoAplicavel(comPmc, "23"), { valor: null, tipo: "PMC" });
+});
+
+test("preco zero e preservado, nao confundido com ausencia", () => {
+  const gratuito = { pmc: { "18": 0 } };
+  assert.equal(temPmc(gratuito), true);
+  assert.deepEqual(precoAplicavel(gratuito, "18"), { valor: 0, tipo: "PMC" });
 });

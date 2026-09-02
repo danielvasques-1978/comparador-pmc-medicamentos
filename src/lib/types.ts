@@ -18,8 +18,8 @@ export type Medicine = {
   kind: string;
   productType?: string;
   presentation: string;
-  pmc: Partial<Record<IcmsZone, number>>;
-  pf?: Partial<Record<IcmsZone, number>>;
+  pmc: Partial<Record<IcmsZone, number | null>>;
+  pf?: Partial<Record<IcmsZone, number | null>>;
   ggremCode?: string;
   registration?: string;
   commercialized?: boolean;
