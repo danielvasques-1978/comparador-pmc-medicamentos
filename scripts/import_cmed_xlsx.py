@@ -218,7 +218,10 @@ def main() -> None:
         encoding="utf-8",
     )
     commercialized = sum(bool(item["commercialized"]) for item in medicines)
-    print(f"Importadas {len(medicines)} apresentações com PMC; {commercialized} comercializadas.")
+    sem_pmc = sum(1 for item in medicines if "pf" in item)
+    print(
+        f"Importadas {len(medicines)} apresentações ({sem_pmc} sem PMC); {commercialized} comercializadas."
+    )
 
 
 if __name__ == "__main__":
