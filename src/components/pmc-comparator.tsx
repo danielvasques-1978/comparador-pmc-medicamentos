@@ -18,6 +18,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { inferForm, normalize } from "@/lib/busca";
 import { codigosDaLinha, codigosParaCsv } from "@/lib/codigos";
+import { celulaDeCodigo, celulaTexto } from "@/lib/csv";
 import { defaultUfIcmsMap, icmsRates, isIcmsRate, ufCodes } from "@/lib/icms";
 import { precoAplicavel, temPmc } from "@/lib/precos";
 import type { RespostaBusca } from "@/lib/resposta-busca";
@@ -514,23 +515,26 @@ export function PmcComparator({
       "Codigo de barras",
       "GGREM",
     ];
-    const lines = [...visibleRows, ...semPmc].map((item) =>
-      [
-        item.name,
-        item.activeIngredient,
-        item.laboratory,
-        item.kind,
-        item.presentation,
-        uf,
-        formatRate(selectedRate),
-        precoAplicavel(item, selectedZone).tipo,
-        String(precoAplicavel(item, selectedZone).valor ?? ""),
-        codigosParaCsv(item).ean,
-        codigosParaCsv(item).ggrem,
-      ]
-        .map((value) => `"${String(value).replaceAll('"', '""')}"`)
-        .join(";"),
-    );
+    const lines = [...visibleRows, ...semPmc].map((item) => {
+      const preco = precoAplicavel(item, selectedZone);
+      const codigos = codigosParaCsv(item);
+      // As colunas de código escapam diferente das demais: ver src/lib/csv.ts.
+      return [
+        ...[
+          item.name,
+          item.activeIngredient,
+          item.laboratory,
+          item.kind,
+          item.presentation,
+          uf,
+          formatRate(selectedRate),
+          preco.tipo,
+          String(preco.valor ?? ""),
+        ].map(celulaTexto),
+        celulaDeCodigo(codigos.ean),
+        celulaDeCodigo(codigos.ggrem),
+      ].join(";");
+    });
     const blob = new Blob([[header.join(";"), ...lines].join("\n")], {
       type: "text/csv;charset=utf-8",
     });
