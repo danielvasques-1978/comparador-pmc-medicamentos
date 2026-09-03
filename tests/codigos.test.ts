@@ -10,7 +10,7 @@ const eanVazio = { ean1: "", ggremCode: "542726030005502", id: "542726030005502"
 
 test("com EAN, mostra EAN primeiro e GGREM depois", () => {
   assert.deepEqual(codigosDaLinha(comEan), [
-    { rotulo: "EAN", valor: "7898937460614" },
+    { rotulo: "Código de barras", valor: "7898937460614" },
     { rotulo: "GGREM", valor: "542726030005502" },
   ]);
 });
@@ -25,7 +25,7 @@ test("EAN string vazia conta como ausente", () => {
 
 test("sem ggremCode, cai no id", () => {
   assert.deepEqual(codigosDaLinha(semGgrem), [
-    { rotulo: "EAN", valor: "7898937460614" },
+    { rotulo: "Código de barras", valor: "7898937460614" },
     { rotulo: "GGREM", valor: "999" },
   ]);
 });
