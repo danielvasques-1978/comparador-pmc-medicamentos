@@ -1036,3 +1036,17 @@ h1 {
 .farmacia-section p:last-child {
   margin-bottom: 0;
 }
+
+/* O aviso de suplemento ocupa o lugar do "nenhum resultado": tem texto corrido
+   em vez de uma linha curta, e por isso precisa de largura e alinhamento
+   próprios dentro do .empty-state. */
+.suplemento-aviso {
+  max-width: 560px;
+  margin-inline: auto;
+}
+
+.suplemento-aviso p {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  text-align: center;
+}

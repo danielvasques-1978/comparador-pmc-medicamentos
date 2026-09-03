@@ -18,3 +18,15 @@ export function codigosDaLinha(item: Identificavel): Codigo[] {
 
   return codigos;
 }
+
+/**
+ * Os mesmos códigos em colunas fixas, para exportação. Ao contrário da linha na
+ * tela, o CSV precisa de posição estável: apresentação sem EAN traz a coluna
+ * vazia em vez de deslocar o GGREM para a esquerda.
+ */
+export function codigosParaCsv(item: Identificavel) {
+  return {
+    ean: item.ean1 || "",
+    ggrem: item.ggremCode ?? item.id,
+  };
+}

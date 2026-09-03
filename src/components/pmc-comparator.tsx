@@ -17,10 +17,11 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { inferForm, normalize } from "@/lib/busca";
-import { codigosDaLinha } from "@/lib/codigos";
+import { codigosDaLinha, codigosParaCsv } from "@/lib/codigos";
 import { defaultUfIcmsMap, icmsRates, isIcmsRate, ufCodes } from "@/lib/icms";
 import { precoAplicavel, temPmc } from "@/lib/precos";
 import type { RespostaBusca } from "@/lib/resposta-busca";
+import { suplementoConsultado } from "@/lib/suplementos";
 import type { IcmsRate, UfCode, UfIcmsMap } from "@/lib/types";
 
 type SortMode = "group-lab" | "price-asc" | "price-desc" | "name";
@@ -284,6 +285,12 @@ export function PmcComparator({
   const visibleRows = filtered.filter(temPmc).slice(0, 250);
   const semPmc = filtered.filter((item) => !temPmc(item)).slice(0, 250);
   const temResultados = visibleRows.length > 0 || semPmc.length > 0;
+  // Só quando a busca foi feita e voltou vazia: o aviso explica uma ausência, e
+  // apontá-lo antes da resposta (ou com a caixa limpa) explicaria coisa nenhuma.
+  const suplementoBuscado =
+    !temResultados && hasSearch && resposta && consultaDaResposta
+      ? suplementoConsultado(consultaDaResposta)
+      : null;
 
   async function syncFromNeon() {
     const clientKey = getClientKey();
@@ -504,6 +511,8 @@ export function PmcComparator({
       "ICMS UF",
       "Tipo de preço",
       "Valor",
+      "Codigo de barras",
+      "GGREM",
     ];
     const lines = [...visibleRows, ...semPmc].map((item) =>
       [
@@ -516,6 +525,8 @@ export function PmcComparator({
         formatRate(selectedRate),
         precoAplicavel(item, selectedZone).tipo,
         String(precoAplicavel(item, selectedZone).valor ?? ""),
+        codigosParaCsv(item).ean,
+        codigosParaCsv(item).ggrem,
       ]
         .map((value) => `"${String(value).replaceAll('"', '""')}"`)
         .join(";"),
@@ -815,6 +826,17 @@ export function PmcComparator({
             <div className="empty-state">
               <SlidersHorizontal size={34} />
               <p>Buscando…</p>
+            </div>
+          ) : suplementoBuscado ? (
+            <div className="empty-state suplemento-aviso">
+              <SlidersHorizontal size={34} />
+              <h3>{suplementoBuscado.nome} não é medicamento registrado</h3>
+              <p>
+                Por isso não aparece aqui. No Brasil o produto é vendido como{" "}
+                <strong>suplemento alimentar</strong>, e suplemento tem preço livre: a CMED fixa preço
+                apenas de medicamentos, então não existe PMC nem Preço Fábrica a exibir.
+              </p>
+              {suplementoBuscado.observacao ? <p>{suplementoBuscado.observacao}</p> : null}
             </div>
           ) : (
             <div className="empty-state">

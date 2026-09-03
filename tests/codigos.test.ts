@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { codigosDaLinha } from "../src/lib/codigos.ts";
+import { codigosDaLinha, codigosParaCsv } from "../src/lib/codigos.ts";
 
 const comEan = { ean1: "7898937460614", ggremCode: "542726030005502", id: "542726030005502" };
 const semEan = { ean1: undefined, ggremCode: "542726030005502", id: "542726030005502" };
@@ -36,4 +36,18 @@ test("nenhuma entrada tem valor vazio", () => {
       assert.notEqual(codigo.valor, "");
     }
   }
+});
+
+test("CSV traz as duas colunas quando há EAN", () => {
+  assert.deepEqual(codigosParaCsv(comEan), { ean: "7898937460614", ggrem: "542726030005502" });
+});
+
+test("CSV deixa a coluna de EAN vazia quando não há, sem deslocar o GGREM", () => {
+  for (const item of [semEan, eanVazio]) {
+    assert.deepEqual(codigosParaCsv(item), { ean: "", ggrem: "542726030005502" });
+  }
+});
+
+test("CSV cai no id quando falta ggremCode, como a linha da tela", () => {
+  assert.deepEqual(codigosParaCsv(semGgrem), { ean: "7898937460614", ggrem: "999" });
 });
