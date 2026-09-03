@@ -24,7 +24,11 @@ export async function GET(request: Request) {
       ? medicines.filter((item) => ids.includes(item.id))
       : buscar(medicines, consulta, estritos);
     return NextResponse.json(montarResposta(encontrados));
-  } catch {
+  } catch (erro) {
+    // O motivo vai para o log do servidor — sem ele, uma senha rotacionada e um
+    // banco fora do ar são indistinguíveis por fora. A mensagem do driver não
+    // carrega a credencial, só o usuário e o host.
+    console.error("busca: falha ao consultar a base", erro);
     // Responder vazio aqui seria indistinguível de "nada encontrado".
     return NextResponse.json({ erro: "Não foi possível consultar a base." }, { status: 503 });
   }
