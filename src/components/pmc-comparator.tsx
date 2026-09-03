@@ -872,7 +872,7 @@ export function PmcComparator({
         </section>
       ) : null}
 
-      {temResultados ? (
+      {visibleRows.length > 0 ? (
         <section className="farmacia-section" aria-label="Como conferir o preço em farmácias">
           <h2>Quanto custa na farmácia?</h2>
           <p>
@@ -888,8 +888,8 @@ export function PmcComparator({
             gov.br.
           </p>
           <p>
-            Leve o código de barras da apresentação escolhida — ele aparece em cada linha desta
-            página.
+            Leve o código de barras da apresentação escolhida — ele aparece nas linhas que trazem o
+            código.
           </p>
         </section>
       ) : null}
