@@ -39,7 +39,7 @@ Fechar a lacuna entre o que o site sabe e o que a pessoa precisa saber, encaminh
 | Forma | Encaminhamento informativo, sem consumo de dados |
 | Posição | Um bloco único abaixo das listas, não um controle por linha |
 | Quando aparece | Somente quando há resultados na tela |
-| Código na linha | EAN em destaque; GGREM passa a secundário |
+| Código na linha | EAN em destaque, rotulado "Código de barras"; GGREM passa a secundário |
 | Fricção do app | Declarada de saída: é aplicativo de celular e exige conta gov.br |
 
 ## O bloco
@@ -54,7 +54,7 @@ Texto, literal:
 >
 > Para conferir o preço real perto de você, o aplicativo **Menor Preço Brasil**, das secretarias estaduais de fazenda, mostra valores de vendas registradas em nota fiscal nos últimos dias. É um aplicativo de celular, para Android e iPhone, e exige conta gov.br.
 >
-> Leve o código de barras da apresentação escolhida — ele aparece em cada linha desta página.
+> Leve o código de barras da apresentação escolhida — ele aparece nas linhas que trazem o código.
 
 A primeira frase é redigida para valer nos dois grupos. Dizer "o valor acima é o teto" seria falso para as apresentações de uso restrito hospitalar, que exibem Preço Fábrica.
 
@@ -66,7 +66,7 @@ O bloco não leva link para loja de aplicativos. O site nomeia a ferramenta; ins
 
 Cada linha exibe hoje `GGREM 542726030005502`, um código de regulação sem utilidade para quem vai comprar. O EAN é o que está impresso na caixa e o que se digita ou escaneia no aplicativo.
 
-A linha passa a mostrar o EAN em destaque, com o GGREM ao lado, em tipografia secundária. O GGREM permanece porque é o identificador que amarra a apresentação à tabela oficial, útil para conferência.
+A linha passa a mostrar o EAN em destaque, rotulado "Código de barras" — a linguagem de quem compra, não a técnica —, com o GGREM ao lado, em tipografia secundária e rótulo inalterado. O GGREM permanece porque é o identificador que amarra a apresentação à tabela oficial, útil para conferência.
 
 Apresentações sem EAN não exibem o rótulo vazio; mostram apenas o GGREM, como hoje. Na edição de 11/08/2026 isso não ocorre — a cobertura é de 100% —, mas a interface não deve depender disso.
 
