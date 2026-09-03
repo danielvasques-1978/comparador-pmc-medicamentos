@@ -1003,3 +1003,13 @@ h1 {
     grid-row: auto;
   }
 }
+
+.medicine-meta small:first-of-type {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.medicine-meta small + small {
+  color: var(--muted);
+  font-weight: 400;
+}

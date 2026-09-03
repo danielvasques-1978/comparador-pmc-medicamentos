@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { inferForm, normalize } from "@/lib/busca";
+import { codigosDaLinha } from "@/lib/codigos";
 import { defaultUfIcmsMap, icmsRates, isIcmsRate, ufCodes } from "@/lib/icms";
 import { precoAplicavel, temPmc } from "@/lib/precos";
 import type { RespostaBusca } from "@/lib/resposta-busca";
@@ -777,7 +778,11 @@ export function PmcComparator({
                   </div>
                   <div className="medicine-meta">
                     <span>{item.laboratory}</span>
-                    <small>GGREM {item.ggremCode ?? item.id}</small>
+                    {codigosDaLinha(item).map((codigo) => (
+                      <small key={codigo.rotulo}>
+                        {codigo.rotulo} {codigo.valor}
+                      </small>
+                    ))}
                   </div>
                   <div className="price-cell">
                   {(() => {
@@ -850,7 +855,11 @@ export function PmcComparator({
                   </div>
                   <div className="medicine-meta">
                     <span>{item.laboratory}</span>
-                    <small>GGREM {item.ggremCode ?? item.id}</small>
+                    {codigosDaLinha(item).map((codigo) => (
+                      <small key={codigo.rotulo}>
+                        {codigo.rotulo} {codigo.valor}
+                      </small>
+                    ))}
                   </div>
                   <div className="price-cell">
                     <small>PF {uf} | ICMS {formatRate(selectedRate)}</small>
