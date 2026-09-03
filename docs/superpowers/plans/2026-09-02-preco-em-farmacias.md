@@ -20,7 +20,7 @@
   - Título: **Quanto custa na farmácia?**
   - *"Os valores desta página vêm da tabela da CMED e são preços de referência — o teto ao consumidor, ou o Preço Fábrica quando a CMED não fixa teto. Nenhum deles é necessariamente o que a farmácia cobra, e a diferença entre estabelecimentos costuma ser grande."*
   - *"Para conferir o preço real perto de você, o aplicativo **Menor Preço Brasil**, das secretarias estaduais de fazenda, mostra valores de vendas registradas em nota fiscal nos últimos dias. É um aplicativo de celular, para Android e iPhone, e exige conta gov.br."*
-  - *"Leve o código de barras da apresentação escolhida — ele aparece em cada linha desta página."*
+  - *"Leve o código de barras da apresentação escolhida — ele aparece nas linhas que trazem o código."*
 - Apresentação sem EAN mostra apenas o GGREM: nenhum rótulo vazio, nenhum traço solto.
 - Mensagens de commit em inglês. Arquivos UTF-8, acentos intactos. Nenhum segredo no repositório.
 
@@ -276,8 +276,8 @@ O bloco entra **depois** do fechamento da seção de Preço Fábrica e **antes**
             gov.br.
           </p>
           <p>
-            Leve o código de barras da apresentação escolhida — ele aparece em cada linha desta
-            página.
+            Leve o código de barras da apresentação escolhida — ele aparece nas linhas que trazem o
+            código.
           </p>
         </section>
       ) : null}
