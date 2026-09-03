@@ -1,7 +1,7 @@
 # Home sem banco em tempo de build
 
 Data: 2026-09-03
-Status: aprovado, aguardando plano de implementação
+Status: implementado em 2026-09-03 (branch home-sem-banco)
 
 ## Contexto
 
@@ -37,6 +37,7 @@ Fazer o build não depender de rede nem de credencial. Uma senha errada, um banc
 | Acesso ao snapshot | `medicines.ts` passa a exportá-lo; continua o único ponto que importa o JSON |
 | `revalidate = 3600` na home | Removido — a página não busca mais nada que mude entre builds |
 | Prova principal | Build local com `DATABASE_URL` deliberadamente inválida tem que passar |
+| Desvio registrado na execução | `inferForm` corrigido em commit próprio, por palavra inteira (COM/COMP, CAP/CAPS, CREM/CREME), com autorização explícita: a regra antiga classificava 32 comprimidos e 4 cápsulas em 26.001 linhas |
 
 ## Arquitetura
 
@@ -90,6 +91,8 @@ As facetas da home são tão atuais quanto o último commit do cron. Esse é o i
 1. o cron só commita o JSON quando os gates passam **e** a gravação no Neon dá certo;
 2. o commit dispara um deploy, que reconstrói a home com o JSON novo;
 3. se o deploy falhar por outro motivo, a data exibida no cabeçalho fica um dia atrasada até o próximo build — mas a primeira busca do visitante a sobrescreve com a data que o banco devolveu.
+
+Há uma assimetria a registrar: as **opções** de Tipo e Forma vêm do snapshot, mas o **filtro** roda sobre as linhas que o banco devolveu. Se a CMED criar um tipo novo e o banco o receber antes de o commit do JSON entrar no ar, esse tipo fica inselecionável por uma execução do cron — as linhas dele aparecem só em "Todos". Forma é um conjunto fechado de sete valores e não sofre disso.
 
 Não há cenário em que a home mostre uma edição que o banco não tenha.
 
