@@ -38,13 +38,13 @@ Fechar a lacuna entre o que o site sabe e o que a pessoa precisa saber, encaminh
 |---|---|
 | Forma | Encaminhamento informativo, sem consumo de dados |
 | Posição | Um bloco único abaixo das listas, não um controle por linha |
-| Quando aparece | Somente quando há resultados na tela |
+| Quando aparece | Somente quando a lista com PMC tem resultados — não basta haver resultados na tela |
 | Código na linha | EAN em destaque, rotulado "Código de barras"; GGREM passa a secundário |
 | Fricção do app | Declarada de saída: é aplicativo de celular e exige conta gov.br |
 
 ## O bloco
 
-Aparece uma vez, abaixo das duas listas, e só quando ao menos uma delas tem resultados. Com até 500 linhas em tela, um controle por linha seria ruído.
+Aparece uma vez, abaixo das duas listas, e só quando a lista com PMC tem resultados — não quando qualquer uma das duas tem. Uma busca que só devolve apresentações de uso restrito hospitalar (Preço Fábrica, sem PMC) não mostra o bloco: o encaminhamento aponta para um aplicativo alimentado por vendas de varejo ao consumidor, e essas apresentações não circulam em farmácia de varejo. Mandar alguém instalar um aplicativo e criar conta gov.br para procurar um medicamento que não é vendido em farmácia é uma promessa que o site não pode cumprir. Com até 500 linhas em tela, um controle por linha seria ruído.
 
 Texto, literal:
 
