@@ -872,6 +872,28 @@ export function PmcComparator({
         </section>
       ) : null}
 
+      {temResultados ? (
+        <section className="farmacia-section" aria-label="Como conferir o preço em farmácias">
+          <h2>Quanto custa na farmácia?</h2>
+          <p>
+            Os valores desta página vêm da tabela da CMED e são preços de referência — o teto ao
+            consumidor, ou o Preço Fábrica quando a CMED não fixa teto. Nenhum deles é
+            necessariamente o que a farmácia cobra, e a diferença entre estabelecimentos costuma ser
+            grande.
+          </p>
+          <p>
+            Para conferir o preço real perto de você, o aplicativo <strong>Menor Preço Brasil</strong>,
+            das secretarias estaduais de fazenda, mostra valores de vendas registradas em nota fiscal
+            nos últimos dias. É um aplicativo de celular, para Android e iPhone, e exige conta
+            gov.br.
+          </p>
+          <p>
+            Leve o código de barras da apresentação escolhida — ele aparece em cada linha desta
+            página.
+          </p>
+        </section>
+      ) : null}
+
       {showSettings ? (
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Configuração de ICMS por UF">
           <section className="settings-modal">

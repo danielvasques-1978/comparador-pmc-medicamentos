@@ -1013,3 +1013,26 @@ h1 {
   color: var(--muted);
   font-weight: 400;
 }
+
+.farmacia-section {
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--panel);
+}
+
+.farmacia-section h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.farmacia-section p {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.farmacia-section p:last-child {
+  margin-bottom: 0;
+}
