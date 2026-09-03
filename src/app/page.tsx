@@ -1,24 +1,13 @@
 import { PmcComparator } from "@/components/pmc-comparator";
-import { getMedicinesCached } from "@/lib/medicines";
-import { inferForm } from "@/lib/busca";
+import { facetasDaBase } from "@/lib/facetas";
+import { snapshotEmbutido } from "@/lib/medicines";
 
-export const revalidate = 3600;
-
-export default async function Home() {
-  const medicines = await getMedicinesCached();
-  const tipos = Array.from(new Set(medicines.map((item) => item.kind))).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  const formas = Array.from(new Set(medicines.map((item) => inferForm(item.presentation)))).sort((a, b) =>
-    a.localeCompare(b, "pt-BR"),
-  );
-  // A data da edição e a fonte são a credencial da página inteira, e precisam
-  // aparecer antes da primeira busca: a resposta só as sobrescreve quando chega.
-  const base = medicines[0];
-  return (
-    <PmcComparator
-      formas={formas}
-      tipos={tipos}
-      tableDate={base?.tableDate ?? "Não informada"}
-      source={base?.source ?? "Fonte importada"}
-    />
-  );
+// As facetas saem do snapshot embutido, não do banco: o build não pode
+// depender de rede nem de credencial. Elas são tão atuais quanto o último
+// commit do cron, que grava src/data/medicines.json a cada edição nova e
+// dispara o deploy — se esse commit um dia sair do workflow, a home passa a
+// mostrar a edição do último commit manual, sem avisar.
+export default function Home() {
+  const { tipos, formas, tableDate, source } = facetasDaBase(snapshotEmbutido);
+  return <PmcComparator formas={formas} tipos={tipos} tableDate={tableDate} source={source} />;
 }

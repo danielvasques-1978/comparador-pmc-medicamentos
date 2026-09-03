@@ -28,11 +28,11 @@ type MedicineRow = {
 
 // O snapshot embutido. Serve para o site funcionar sem DATABASE_URL configurada;
 // não serve para disfarçar um banco que respondeu com erro.
-const embutida = fallbackMedicines as Medicine[];
+export const snapshotEmbutido = fallbackMedicines as Medicine[];
 
 export async function getMedicines() {
   const sql = getSql();
-  if (!sql) return embutida;
+  if (!sql) return snapshotEmbutido;
 
   // Uma falha de consulta propaga: devolver o snapshot embutido aqui tornaria o
   // 503 da rota inalcançável e faria o banco fora do ar virar silêncio na tela.
@@ -64,7 +64,7 @@ export async function getMedicines() {
     order by laboratory, name, presentation
   `;
 
-  if (rows.length === 0) return embutida;
+  if (rows.length === 0) return snapshotEmbutido;
 
   return (rows as MedicineRow[]).map((row) => ({
     id: row.id,
@@ -105,7 +105,7 @@ export async function getMedicinesCached() {
       .then((medicines) => {
         // O snapshot embutido não é resposta do banco: fixá-lo por 15 minutos
         // esconderia o banco voltando ao ar.
-        if (medicines !== embutida) cache = { at: Date.now(), medicines };
+        if (medicines !== snapshotEmbutido) cache = { at: Date.now(), medicines };
         return medicines;
       })
       .finally(() => {
