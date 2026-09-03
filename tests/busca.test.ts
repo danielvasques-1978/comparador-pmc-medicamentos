@@ -80,3 +80,19 @@ test("inferForm: as demais regras continuam iguais", () => {
   assert.equal(inferForm("40 MG/ML SUSP OR CT FR VD AMB X 100 ML"), "Xarope/suspensão");
   assert.equal(inferForm("ADESIVO TRANSDÉRMICO CT ENV AL X 4"), "Outras");
 });
+
+test("inferForm: precedência — Comprimido vence Injetável quando os dois casam", () => {
+  // A ordem do if-chain é comportamento: quem trocar Comprimido e Injetável
+  // de lugar precisa passar por aqui. A linha real abaixo carrega COM como
+  // preposição, e por isso cai em Comprimido — é a cauda documentada em
+  // inferForm, aceita por ser 15 linhas em 26.001.
+  assert.equal(
+    inferForm("60 MG/ML SOL INJ CT SER PREENC VD TRANS X 1ML + AGU COM SIST SEGURANÇA"),
+    "Comprimido",
+  );
+});
+
+test("inferForm: precedência — Cápsula vence Tópico quando os dois casam", () => {
+  // "gel" está na regra de Tópico; CAPS antes garante cápsula gelatinosa.
+  assert.equal(inferForm("20 MG CAPS GEL MOLE CT BL AL X 30"), "Cápsula");
+});

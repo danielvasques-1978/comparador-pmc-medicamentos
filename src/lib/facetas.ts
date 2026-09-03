@@ -1,5 +1,5 @@
 import { inferForm } from "./busca.ts";
-import type { Medicine } from "./types.ts";
+import type { Medicine } from "./types";
 
 export type FonteDeFacetas = Pick<Medicine, "kind" | "presentation" | "tableDate" | "source">;
 

@@ -40,6 +40,10 @@ export function inferForm(presentation: string) {
   const text = normalize(presentation);
   // Por palavra inteira: a CMED abrevia comprimido como COM (raramente COMP) e
   // cápsula como CAP (raramente CAPS). Substring pegaria COMPRESSAS e CAPILAR.
+  // Cauda conhecida: COM também é preposição — "AGU COM SIST SEGURANÇA",
+  // "COM SABOR" —, e ~15 linhas em 26.001 caem em Comprimido por isso.
+  // Tokenizar por espaço deixa passar "50MG/COM" (1 linha); textTokens()
+  // pegaria, mas a diferença não justifica trocar hoje.
   const palavras = new Set(text.split(/\s+/));
   if (palavras.has("com") || palavras.has("comp")) return "Comprimido";
   if (palavras.has("cap") || palavras.has("caps")) return "Cápsula";
