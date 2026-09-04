@@ -10,6 +10,27 @@ app:
   host: ${APP_HOST:http://localhost:3200}
   openApiConf:
     filePath: openapi.yaml
+  # Passe autenticado. As credenciais vêm de SCAN_EMAIL/SCAN_PASSWORD, geradas em
+  # .env.scan (ignorado pelo git) e válidas só no banco descartável do alvo; sem
+  # elas definidas, `hawk validate auth` falha em vez de varrer como anônimo.
+  authentication:
+    usernamePassword:
+      type: JSON
+      loginPath: /api/auth/login
+      usernameField: email
+      passwordField: password
+      scanUsername: ${SCAN_EMAIL}
+      scanPassword: ${SCAN_PASSWORD}
+    cookieAuthorization:
+      cookieNames:
+        - comparador_pmc_session
+    # Logado: /api/auth/me e /api/account/export devolvem o e-mail do usuário;
+    # deslogado: as rotas protegidas respondem 401.
+    loggedInIndicator: ".*\"email\":\".*"
+    loggedOutIndicator: ".*401.*"
+    testPath:
+      path: /api/account/export
+      success: ".*200.*"
 hawk:
   spider:
     base: true
