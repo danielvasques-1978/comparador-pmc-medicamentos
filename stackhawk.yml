@@ -1,0 +1,25 @@
+# Varredura dinâmica (DAST) com HawkScan / StackHawk.
+#
+# Alvo: o site rodando localmente em modo produção (next start) na porta 3200,
+# apontado para um banco descartável — nunca para o Neon de produção, porque a
+# varredura escreve em toda rota que aceita escrita (registro, perfil, favoritos).
+# Sobrescrever o host em tempo de execução: APP_HOST=http://... hawk scan
+app:
+  applicationId: ${APP_ID:e84bc71e-b3bf-40bc-9e64-f30151fadec3}
+  env: ${APP_ENV:Production}
+  host: ${APP_HOST:http://localhost:3200}
+  openApiConf:
+    filePath: openapi.yaml
+hawk:
+  spider:
+    base: true
+    maxDurationMinutes: 5
+tags:
+  - name: _STACKHAWK_AGENT
+    value: ${HAWK_AGENT:none}
+  - name: _STACKHAWK_GIT_COMMIT_SHA
+    value: ${COMMIT_SHA:none}
+  - name: _STACKHAWK_GIT_BRANCH
+    value: ${BRANCH_NAME:none}
+  - name: git_origin
+    value: github.com/danielvasques-1978/comparador-pmc-medicamentos

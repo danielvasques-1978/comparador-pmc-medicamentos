@@ -1,0 +1,190 @@
+openapi: 3.0.3
+info:
+  title: Comparador PMC Medicamentos — API interna
+  version: "2026-09-04"
+  description: >-
+    Especificação derivada à mão de src/app/api/**/route.ts, para a varredura
+    dinâmica do HawkScan. Não é contrato público: a API serve só o front do
+    próprio site. Mantida à mão — ao criar ou mudar uma rota, ajustar aqui.
+servers:
+  - url: http://localhost:3200
+paths:
+  /api/medicines/search:
+    get:
+      summary: Busca de apresentações por texto ou por códigos GGREM
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+          example: clonazepam
+        - name: ids
+          in: query
+          description: Lista de GGREM separados por vírgula (modo favoritos)
+          schema: { type: string }
+          example: "544221120002217"
+      responses:
+        "200": { description: Grupos comPmc/semPmc, contagens e truncamento }
+        "503": { description: Base indisponível }
+  /api/auth/register:
+    post:
+      summary: Cria conta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+                acceptedPrivacy: { type: boolean }
+      responses:
+        "200": { description: Conta criada; cookie de sessão emitido }
+        "400": { description: Dados inválidos }
+  /api/auth/login:
+    post:
+      summary: Entra; emite cookie de sessão
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200": { description: Sessão emitida }
+        "401": { description: Credenciais inválidas }
+  /api/auth/logout:
+    post:
+      summary: Encerra a sessão
+      responses:
+        "200": { description: Cookie removido }
+  /api/auth/me:
+    get:
+      summary: Usuário da sessão atual
+      responses:
+        "200": { description: Usuário ou null }
+  /api/account/export:
+    get:
+      summary: Exporta os dados da conta (LGPD)
+      responses:
+        "200": { description: Dados da conta }
+        "401": { description: Sem sessão }
+  /api/account/delete:
+    post:
+      summary: Exclui a conta da sessão atual
+      responses:
+        "200": { description: Conta excluída }
+        "401": { description: Sem sessão }
+  /api/billing/checkout:
+    post:
+      summary: Inicia checkout de assinatura
+      responses:
+        "200": { description: URL de checkout }
+        "401": { description: Sem sessão }
+  /api/billing/portal:
+    post:
+      summary: Abre o portal de cobrança
+      responses:
+        "200": { description: URL do portal }
+        "401": { description: Sem sessão }
+  /api/billing/webhook:
+    post:
+      summary: Webhook do Stripe (exige assinatura)
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "400": { description: Assinatura ausente ou inválida }
+  /api/profile:
+    post:
+      summary: Associa a chave do cliente a um e-mail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clientKey: { type: string }
+                email: { type: string, format: email }
+      responses:
+        "200": { description: Perfil atualizado }
+  /api/profile/favorites:
+    get:
+      summary: Favoritos da chave do cliente
+      parameters:
+        - name: clientKey
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Lista de GGREM favoritos }
+    post:
+      summary: Marca ou desmarca um favorito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clientKey: { type: string }
+                medicineId: { type: string }
+                favorite: { type: boolean }
+      responses:
+        "200": { description: Favoritos atualizados }
+  /api/profile/history:
+    get:
+      summary: Histórico de buscas da chave do cliente
+      parameters:
+        - name: clientKey
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Buscas recentes }
+    post:
+      summary: Registra uma busca
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clientKey: { type: string }
+                query: { type: string }
+                uf: { type: string }
+                icmsRate: { type: string }
+                resultCount: { type: integer }
+      responses:
+        "200": { description: Registrado }
+  /api/profile/settings:
+    get:
+      summary: Mapa UF → alíquota da chave do cliente
+      parameters:
+        - name: clientKey
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Configurações }
+    post:
+      summary: Salva o mapa UF → alíquota
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clientKey: { type: string }
+                ufIcmsMap:
+                  type: object
+                  additionalProperties: { type: string }
+      responses:
+        "200": { description: Salvo }
