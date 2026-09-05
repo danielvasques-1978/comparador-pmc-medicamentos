@@ -10,6 +10,12 @@ app:
   host: ${APP_HOST:http://localhost:3200}
   openApiConf:
     filePath: openapi.yaml
+  # A varredura autenticada não pode exercer estas: logout apaga o cookie de
+  # sessão do próprio scanner (vira auth-wall e derruba o resto do passe), e
+  # account/delete remove o usuário de varredura no meio do caminho.
+  excludePaths:
+    - /api/auth/logout
+    - /api/account/delete
   # Passe autenticado. As credenciais vêm de SCAN_EMAIL/SCAN_PASSWORD, geradas em
   # .env.scan (ignorado pelo git) e válidas só no banco descartável do alvo; sem
   # elas definidas, `hawk validate auth` falha em vez de varrer como anônimo.
