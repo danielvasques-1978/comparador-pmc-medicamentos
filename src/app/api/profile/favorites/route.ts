@@ -4,18 +4,20 @@ import { getSql } from "@/lib/neon";
 import { getProfileId } from "@/lib/profile-server";
 
 export async function GET(request: NextRequest) {
-  const sql = getSql();
-  const clientKey = request.nextUrl.searchParams.get("clientKey");
-  if (!sql || !clientKey) return NextResponse.json({ favorites: [] });
+  return comGuarda("profile/favorites GET", async () => {
+    const sql = getSql();
+    const clientKey = request.nextUrl.searchParams.get("clientKey");
+    if (!sql || !clientKey) return NextResponse.json({ favorites: [] });
 
-  const { profileId } = await getProfileId(sql, request, clientKey);
-  const rows = await sql`
-    select medicine_id
-    from user_favorites
-    where profile_id = ${profileId}
-  `;
+    const { profileId } = await getProfileId(sql, request, clientKey);
+    const rows = await sql`
+      select medicine_id
+      from user_favorites
+      where profile_id = ${profileId}
+    `;
 
-  return NextResponse.json({ favorites: rows.map((row) => row.medicine_id) });
+    return NextResponse.json({ favorites: rows.map((row) => row.medicine_id) });
+  });
 }
 
 export async function POST(request: NextRequest) {

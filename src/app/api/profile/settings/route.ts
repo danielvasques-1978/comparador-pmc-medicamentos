@@ -4,18 +4,20 @@ import { getSql } from "@/lib/neon";
 import { getProfileId } from "@/lib/profile-server";
 
 export async function GET(request: NextRequest) {
-  const sql = getSql();
-  const clientKey = request.nextUrl.searchParams.get("clientKey");
-  if (!sql || !clientKey) return NextResponse.json({ settings: null });
+  return comGuarda("profile/settings GET", async () => {
+    const sql = getSql();
+    const clientKey = request.nextUrl.searchParams.get("clientKey");
+    if (!sql || !clientKey) return NextResponse.json({ settings: null });
 
-  const { profileId } = await getProfileId(sql, request, clientKey);
-  const rows = await sql`
-    select uf_icms_map
-    from user_settings
-    where profile_id = ${profileId}
-  `;
+    const { profileId } = await getProfileId(sql, request, clientKey);
+    const rows = await sql`
+      select uf_icms_map
+      from user_settings
+      where profile_id = ${profileId}
+    `;
 
-  return NextResponse.json({ settings: rows[0]?.uf_icms_map ?? null });
+    return NextResponse.json({ settings: rows[0]?.uf_icms_map ?? null });
+  });
 }
 
 export async function POST(request: NextRequest) {

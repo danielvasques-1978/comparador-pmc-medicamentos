@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { comGuarda } from "@/lib/api-guard";
 import { getCurrentUser } from "@/lib/auth-server";
 import { getSql } from "@/lib/neon";
 
 export async function GET(request: NextRequest) {
+  return comGuarda("account/export GET", async () => {
   const sql = getSql();
   if (!sql) return NextResponse.json({ error: "database unavailable" }, { status: 503 });
 
@@ -32,12 +34,13 @@ export async function GET(request: NextRequest) {
     `,
   ]);
 
-  return NextResponse.json({
-    exportedAt: new Date().toISOString(),
-    user,
-    profiles,
-    favorites,
-    settings,
-    history,
+    return NextResponse.json({
+      exportedAt: new Date().toISOString(),
+      user,
+      profiles,
+      favorites,
+      settings,
+      history,
+    });
   });
 }
