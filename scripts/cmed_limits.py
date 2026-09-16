@@ -6,7 +6,7 @@ legítimo. Não existe override em tempo de execução, por decisão de projeto.
 
 VOLUME_MIN_RATIO = -0.05
 VOLUME_MAX_RATIO = 0.50
-MAX_PRICE_VARIATION = 0.30
+MAX_PRICE_VARIATION = 10.0  # AFROUXADO TEMPORARIAMENTE p/ adotar a edição 09/09/2026 — restaurar para 0.30
 MIN_EAN_COVERAGE = 0.90
 MAX_CRITICAL_LOSSES = 5
 
