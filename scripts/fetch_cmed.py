@@ -10,9 +10,9 @@ import requests
 BASE_URL = "https://www.gov.br"
 PRICES_PAGE_URL = "https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos"
 
-# O sufixo "site" é o PMC; "gov" é o PMVG, que não interessa aqui.
+# Aceita os nomes antigo e atual do PMC; exclui "gov" e "lista_pmvg".
 LINK_PATTERN = re.compile(
-    r"href=[\"']([^\"']*xls_conformidade_site_(\d{8})_\d+\.xlsx[^\"']*)[\"']",
+    r"href=[\"']([^\"']*((?:xls_conformidade_site|lista_pmc)_(\d{8})_\d+\.xlsx)[^\"']*)[\"']",
     re.IGNORECASE,
 )
 
@@ -28,13 +28,13 @@ def find_edition(html: str) -> Edition:
     matches = LINK_PATTERN.findall(html)
     if not matches:
         raise ValueError(
-            "Nenhum link no padrão xls_conformidade_site_<data>_<seq>.xlsx foi "
-            "encontrado na página da Anvisa. O layout pode ter mudado."
+            "Nenhum link PMC nos padrões xls_conformidade_site_<data>_<seq>.xlsx "
+            "ou lista_pmc_<data>_<seq>.xlsx foi encontrado na página da Anvisa. "
+            "O layout pode ter mudado."
         )
 
-    href, stamp = max(matches, key=lambda item: item[1])
+    href, filename, stamp = max(matches, key=lambda item: item[2])
     url = href if href.startswith("http") else f"{BASE_URL}{href}"
-    filename = re.search(r"(xls_conformidade_site_\d{8}_\d+\.xlsx)", href).group(1)
     published = f"{stamp[6:8]}/{stamp[4:6]}/{stamp[0:4]}"
     return Edition(url=url, published=published, filename=filename)
 

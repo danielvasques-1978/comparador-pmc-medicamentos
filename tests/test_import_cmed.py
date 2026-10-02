@@ -1,4 +1,54 @@
+import pytest
+from openpyxl import load_workbook
+
 from scripts.import_cmed_xlsx import import_cmed
+
+
+@pytest.mark.parametrize("aba_ativa", [0, 1])
+def test_importa_layout_com_cabecalho_separado(build_cmed_workbook, aba_ativa):
+    path = build_cmed_workbook([
+        {
+            "SUBSTÂNCIA": "CLONAZEPAM",
+            "LABORATÓRIO": "ACME S.A.",
+            "CÓDIGO GGREM": "538912020009303",
+            "PRODUTO": "RIVOTRIL",
+            "APRESENTAÇÃO": "2 MG",
+            "PMC 18 %": "50,28",
+            "COMERCIALIZAÇÃO 2025": "Sim",
+        },
+        {
+            "SUBSTÂNCIA": "HOSPITALAR",
+            "LABORATÓRIO": "ACME S.A.",
+            "CÓDIGO GGREM": "538912020009304",
+            "PRODUTO": "INJETÁVEL",
+            "APRESENTAÇÃO": "10 MG",
+            "PF 18 %": "100,00",
+            "RESTRIÇÃO HOSPITALAR": "Sim",
+        },
+    ])
+    workbook = load_workbook(path)
+    sheet = workbook.active
+    sheet.title = "Lista PMC"
+    sheet.delete_rows(1, 4)
+    metadata = workbook.create_sheet("Cabeçalho", 0)
+    metadata.append(["Secretaria Executiva - CMED"])
+    metadata.append(["LISTA DE PREÇOS DE MEDICAMENTOS"])
+    metadata.append(["Gerada em 23/09/2026 19h30min."])
+    metadata.append(["Preços válidos a partir de 24 de setembro de 2026"])
+    workbook.active = aba_ativa
+    workbook.save(path)
+    workbook.close()
+
+    columns = {}
+    medicines = import_cmed(path, columns)
+
+    assert [item["id"] for item in medicines] == ["538912020009303", "538912020009304"]
+    assert {item["tableDate"] for item in medicines} == {"23/09/2026"}
+    assert medicines[0]["pmc"]["18"] == 50.28
+    assert medicines[0]["commercialized"] is True
+    assert medicines[1]["pf"]["18"] == 100.0
+    assert medicines[1]["hospitalRestricted"] is True
+    assert "PF 18 %" in columns
 
 
 def test_importa_linha_com_pmc(build_cmed_workbook):
