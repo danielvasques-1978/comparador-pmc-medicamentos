@@ -31,3 +31,35 @@ def test_escolhe_a_edicao_mais_recente_quando_ha_varias():
 def test_falha_quando_o_padrao_do_nome_muda():
     with pytest.raises(ValueError, match="Nenhum link"):
         find_edition("<html><a href='/x/planilha_precos.xlsx'>PMC</a></html>")
+
+
+def test_encontra_o_novo_nome_pmc_publicado_pela_anvisa():
+    html = """
+    <a href="/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_pmc_20260923_222937320.xlsx/@@download/file">PMC - xls</a>
+    <a href="/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_pmvg_20260924_222937320.xlsx/@@download/file">PMVG - xls</a>
+    """
+
+    edition = find_edition(html)
+
+    assert edition.filename == "lista_pmc_20260923_222937320.xlsx"
+    assert edition.published == "23/09/2026"
+    assert edition.url == (
+        "https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/"
+        "lista_pmc_20260923_222937320.xlsx/@@download/file"
+    )
+
+
+@pytest.mark.parametrize("nova_edicao_primeiro", [True, False])
+def test_escolhe_a_mais_recente_entre_os_dois_formatos(nova_edicao_primeiro):
+    novo = '<a href="https://www.gov.br/x/lista_pmc_20260923_222937320.xlsx">PMC</a>'
+    html = novo + PAGINA if nova_edicao_primeiro else PAGINA + novo
+
+    edition = find_edition(html)
+
+    assert edition.published == "23/09/2026"
+    assert edition.url == "https://www.gov.br/x/lista_pmc_20260923_222937320.xlsx"
+
+
+def test_nao_usa_a_pmvg_quando_nao_ha_pmc():
+    with pytest.raises(ValueError, match="Nenhum link"):
+        find_edition('<a href="/x/lista_pmvg_20260923_222937320.xlsx">PMVG</a>')

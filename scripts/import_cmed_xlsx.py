@@ -127,9 +127,13 @@ def import_cmed(input_path: Path, columns_out: dict[str, int] | None = None) -> 
     # columns) — otherwise the caller is left holding a locked file.
     workbook = load_workbook(input_path, read_only=True, data_only=True)
     try:
-        sheet = workbook.active
+        if "Lista PMC" in workbook.sheetnames:
+            sheet = workbook["Lista PMC"]
+            metadata_sheet = workbook["Cabeçalho"]
+        else:
+            sheet = metadata_sheet = workbook.active
         header_row = find_header_row(sheet)
-        table_date = extract_table_date(sheet)
+        table_date = extract_table_date(metadata_sheet)
         headers = [clean(value) for value in next(sheet.iter_rows(min_row=header_row, max_row=header_row, values_only=True))]
         columns = {header: index for index, header in enumerate(headers)}
         # Callers that need to know which columns the spreadsheet actually
