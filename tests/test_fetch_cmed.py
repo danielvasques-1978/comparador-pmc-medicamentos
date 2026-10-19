@@ -63,3 +63,18 @@ def test_escolhe_a_mais_recente_entre_os_dois_formatos(nova_edicao_primeiro):
 def test_nao_usa_a_pmvg_quando_nao_ha_pmc():
     with pytest.raises(ValueError, match="Nenhum link"):
         find_edition('<a href="/x/lista_pmvg_20260923_222937320.xlsx">PMVG</a>')
+
+
+def test_encontra_o_nome_pmc_com_underscore_duplo():
+    # A edição de 09/10/2026 veio como lista_pmc__<data> (dois underscores);
+    # o PMVG do mesmo dia (lista_pmvg__<data>) tem de continuar fora.
+    html = """
+    <a href="/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_pmc__20261009_115232671.xlsx/@@download/file">PMC</a>
+    <a href="/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_pmvg__20261009_115232671.xlsx/@@download/file">PMVG</a>
+    """
+
+    edition = find_edition(html)
+
+    assert edition.filename == "lista_pmc__20261009_115232671.xlsx"
+    assert edition.published == "09/10/2026"
+    assert edition.url.endswith("lista_pmc__20261009_115232671.xlsx/@@download/file")

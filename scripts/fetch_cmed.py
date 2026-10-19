@@ -11,8 +11,11 @@ BASE_URL = "https://www.gov.br"
 PRICES_PAGE_URL = "https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos"
 
 # Aceita os nomes antigo e atual do PMC; exclui "gov" e "lista_pmvg".
+# O separador entre o nome e a data é `_+` porque a Anvisa publicou tanto
+# lista_pmc_<data> (um _) quanto lista_pmc__<data> (dois _), e nada garante
+# que não volte a variar.
 LINK_PATTERN = re.compile(
-    r"href=[\"']([^\"']*((?:xls_conformidade_site|lista_pmc)_(\d{8})_\d+\.xlsx)[^\"']*)[\"']",
+    r"href=[\"']([^\"']*((?:xls_conformidade_site|lista_pmc)_+(\d{8})_\d+\.xlsx)[^\"']*)[\"']",
     re.IGNORECASE,
 )
 
