@@ -9,7 +9,8 @@ from pathlib import Path
 from scripts.cmed_limits import (
     MAX_CRITICAL_LOSSES,
     MAX_PF_SEM_HOSPITALAR,
-    MAX_PRICE_VARIATION,
+    MAX_PRICE_DROP,
+    MAX_PRICE_INCREASE,
     MIN_EAN_COVERAGE,
     VOLUME_MAX_RATIO,
     VOLUME_MIN_RATIO,
@@ -85,18 +86,26 @@ def _check_volume(report: dict) -> Failure | None:
 
 
 def _check_price(report: dict) -> Failure | None:
-    if report["maxPriceVariation"] <= MAX_PRICE_VARIATION:
-        return None
+    # Limites assimétricos: uma alta acima de MAX_PRICE_INCREASE ou uma queda
+    # acima de MAX_PRICE_DROP. priceChanges vem ordenado por magnitude (desc) e
+    # truncado às maiores, então os infratores — sempre de magnitude alta —
+    # estão presentes.
     offenders = [
-        f"{item['name']} ({item['before']:.2f} para {item['after']:.2f}, {item['variation']:+.1%})"
+        item
         for item in report["priceChanges"]
-        if abs(item["variation"]) > MAX_PRICE_VARIATION
+        if item["variation"] > MAX_PRICE_INCREASE or item["variation"] < -MAX_PRICE_DROP
     ]
-    # Report count found in the sample and clarify it's among largest variations
-    sample_text = "; ".join(offenders[:10])
+    if not offenders:
+        return None
+    textos = [
+        f"{item['name']} ({item['before']:.2f} para {item['after']:.2f}, {item['variation']:+.1%})"
+        for item in offenders
+    ]
+    sample_text = "; ".join(textos[:10])
     detail = (
-        f"Entre as maiores variações de preço, {len(offenders)} apresentação(ões) variaram acima de {MAX_PRICE_VARIATION:.0%} "
-        f"(para cima ou para baixo): " + sample_text
+        f"Entre as maiores variações de preço, {len(offenders)} apresentação(ões) "
+        f"passaram dos limites (alta acima de {MAX_PRICE_INCREASE:.0%} ou queda acima de "
+        f"{MAX_PRICE_DROP:.0%}): " + sample_text
     )
     return Failure("preco", detail)
 

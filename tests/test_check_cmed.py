@@ -38,10 +38,11 @@ def test_trava_volume_quando_cresce_demais():
     assert [f.name for f in run_checks(base_report(volumeRatio=0.80), VAZIO, VAZIO)] == ["volume"]
 
 
-def test_trava_preco_acima_do_limite():
+def test_trava_preco_alta_acima_do_limite():
+    # Alta acima de +100% (ex.: ×10 por erro de dígito) ainda tem de barrar.
     report = base_report(
-        maxPriceVariation=0.45,
-        priceChanges=[{"id": "a", "name": "X", "before": 10.0, "after": 14.5, "variation": 0.45}],
+        maxPriceVariation=1.20,
+        priceChanges=[{"id": "a", "name": "X", "before": 10.0, "after": 22.0, "variation": 1.20}],
     )
 
     failures = run_checks(report, VAZIO, VAZIO)
@@ -50,14 +51,14 @@ def test_trava_preco_acima_do_limite():
     assert "X" in failures[0].detail
 
 
-def test_trava_preco_com_queda_grande_tambem():
-    # A collapse in price is the more alarming direction for a parser bug
-    # (e.g. a column shifted and PMC 18% now reads a much smaller column),
-    # so it must trip the gate exactly like a spike, and the message must
-    # not call it an "aumento" when it is actually a drop.
+def test_trava_preco_com_queda_quase_total():
+    # Um colapso de preço é a direção mais alarmante para um bug de parser
+    # (coluna deslocada que lê um valor muito menor), então uma queda acima do
+    # limite de queda (90%) deve barrar, e a mensagem não pode chamar de
+    # "aumento" o que é queda.
     report = base_report(
-        maxPriceVariation=0.40,
-        priceChanges=[{"id": "a", "name": "Queda Suspeita", "before": 100.0, "after": 60.0, "variation": -0.40}],
+        maxPriceVariation=0.95,
+        priceChanges=[{"id": "a", "name": "Queda Suspeita", "before": 100.0, "after": 5.0, "variation": -0.95}],
     )
 
     failures = run_checks(report, VAZIO, VAZIO)
@@ -66,6 +67,20 @@ def test_trava_preco_com_queda_grande_tambem():
     detail = failures[0].detail
     assert "Queda Suspeita" in detail
     assert "aumento" not in detail.lower()
+
+
+def test_libera_reprecificacao_normal_dentro_dos_limites():
+    # Reprecificação legítima: alta de 61% (como a EPYZTEK de 09/10/2026) e
+    # queda de 85% (como as correções de genéricos de 09/2026) passam sozinhas.
+    report = base_report(
+        maxPriceVariation=0.85,
+        priceChanges=[
+            {"id": "a", "name": "Subiu", "before": 100.0, "after": 161.0, "variation": 0.61},
+            {"id": "b", "name": "Caiu", "before": 100.0, "after": 15.0, "variation": -0.85},
+        ],
+    )
+
+    assert run_checks(report, VAZIO, VAZIO) == []
 
 
 def test_trava_ean_abaixo_da_cobertura():
@@ -136,10 +151,10 @@ def test_price_message_clarifies_sample_when_truncated():
     # In real scenario, priceChanges would be pre-truncated to ~50 largest variations
     # but we're testing that if there were many, the message should be honest
     large_price_changes = [
-        {"id": f"med{i}", "name": f"Med{i}", "before": 10.0, "after": 15.0, "variation": 0.50}
+        {"id": f"med{i}", "name": f"Med{i}", "before": 10.0, "after": 22.0, "variation": 1.20}
         for i in range(70)
     ]
-    report = base_report(maxPriceVariation=0.50, priceChanges=large_price_changes)
+    report = base_report(maxPriceVariation=1.20, priceChanges=large_price_changes)
 
     failures = run_checks(report, VAZIO, VAZIO)
 
